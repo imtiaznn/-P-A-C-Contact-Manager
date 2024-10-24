@@ -1,38 +1,59 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include "structs.h"
 #define SIZE 5
 
-void sortCharArray(char a[][20]) {
-    char temp[20];
+//Creates a node on a binary tree with contact as stored data
+TreeNode* createNode(Contact *c) {
+    TreeNode* newNode = (TreeNode*) malloc(sizeof(TreeNode));
 
-    //loops over the amount of passes to sort array
-    for(size_t i = 1; i < SIZE; ++i) {
-        //loops over every index of the array and the index after it
-        for(size_t j = 0; j < SIZE-1; ++j) {
-            if(strcmp(a[j],a[j+1]) == 1) {
-                //swaps the position of an index in an array and the index after it
-                strcpy(temp, a[j]);
-                strcpy(a[j], a[j+1]);
-                strcpy(a[j+1], temp);
-            }
-        }
+    newNode->contact = (Contact*) malloc(sizeof(Contact));
+
+    strcpy(newNode->contact->name, c->name);
+    strcpy(newNode->contact->phoneNum, c->phoneNum);
+    strcpy(newNode->contact->email, c->email);
+
+    newNode->leftPtr = newNode->rightPtr = NULL;
+
+    return newNode;
+}
+
+//Searches for a node based on name strating with the root
+TreeNode* searchNode(TreeNode* root, const char* name) {
+
+    //Returns the root if theres no tree or if node is found
+    if (root == NULL || root->contact->name == name) {
+        return root;
+    }
+
+    //Continues searching towards node to the left or right of the root
+    if (strcmp(root->contact->name, name) > 0) {
+        return searchNode(root->leftPtr, name);
+    } else {
+        return searchNode(root->rightPtr, name);
     }
 }
 
-int strBinSearch(const char a[SIZE][20], char key[20], size_t low, size_t high) {
-    while(low <= high) {
-        int mid = (low + high) / 2;
-
-        printf("\nComparing: %s, %s", a[mid], key);   
-
-        if (strcmp(a[mid], key) == 0) {
-            return mid;
-        } else if (strcmp(a[mid], key) > 0) {  // a[mid] is greater than key
-            high = mid - 1;
-        } else {  // a[mid] is less than key
-            low = mid + 1;
-        }
+//Inserts a node at its appropiate position based on the name
+TreeNode* insertNode(TreeNode* root, const char* name){
+    //Create a tree if no tree is present
+    if (root == NULL) {
+        return createNode(root->contact);
     }
 
-    return -1;
+    //Returns the contact if its already present in the tree
+    if (root->contact->name == name) {
+        return root;
+    }
+
+    if (strcmp(root->contact->name, name) < 0) {
+        //If the key to be inserted is greater than the name, insert it to the right subtree
+        root->rightPtr = insertNode(root->rightPtr, name);
+    } else {
+        //If the key to be inserted is lesser than the name, insert it to the left subtree
+        root->leftPtr = insertNode(root->leftPtr, name);
+    }
+
+    return root;
 }

@@ -2,10 +2,12 @@
 #define UTILS_H
 #include <stdio.h>
 #include <string.h>
-#define SIZE 5
+#include "structs.h"
 
-void sortCharArray(char a[][20]);
+TreeNode* createNode(Contact *c);
 
-int strBinSearch(const char a[SIZE][20], char key[20], size_t low, size_t high);
+TreeNode* searchNode(const TreeNode* root, const char* name);
+
+TreeNode* insertNode(TreeNode* node, const char* name);
 
 #endif
