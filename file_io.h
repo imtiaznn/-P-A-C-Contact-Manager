@@ -2,10 +2,18 @@
 #define FILE_IO_H
 #include "structs.h"
 
-void saveContact(const char *name, const char *phoneNum, const char *email);
+void saveContact(const char* name, const char* phoneNum, const char* email);
 
-Contact* createContact(const char *name, const char *phoneNum, const char *email);
+void loadCSV(TreeNode** root, int* count);
 
-void freeContact(Contact *c);
+void updateCSVLoop(TreeNode* root, FILE* fPtr);
+
+void updateCSV(TreeNode* root);
+
+void displayCSV(TreeNode* root, int* count, int contactPerPage, int currentPage);
+
+int refreshIndex(TreeNode* root, int currentIndex);
+
+int getOption(int currentOption, char input[10]);
 
 #endif

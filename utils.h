@@ -1,13 +1,24 @@
 #ifndef UTILS_H
 #define UTILS_H
-#include <stdio.h>
-#include <string.h>
+
 #include "structs.h"
+
+Contact* createContact(int count, const char* name, const char* phoneNum, const char* email);
 
 TreeNode* createNode(Contact *c);
 
-TreeNode* searchNode(const TreeNode* root, const char* name);
+TreeNode* insertNode(TreeNode* root, TreeNode* newNode);
 
-TreeNode* insertNode(TreeNode* node, const char* name);
+TreeNode* searchNode(TreeNode* root, const char* name);
+
+void updateCSVLoop(TreeNode* root, FILE* fPtr);
+
+void updateCSV(TreeNode* root);
+
+void inorderTrav(TreeNode* root);
+
+TreeNode* deleteContact(TreeNode* root, const char* name);
+
+void freeContact(Contact* c);
 
 #endif

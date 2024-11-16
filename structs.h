@@ -3,6 +3,7 @@
 
 //Creates a struct to store contact info
 typedef struct contact {
+    int index;
     char *name;
     char *phoneNum;
     char *email;
