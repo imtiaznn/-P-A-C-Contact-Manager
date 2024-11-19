@@ -4,28 +4,30 @@
 #include "structs.h"
 #include "utils.h"
 
-
+//Saves a contact into the CSV file, does not save it into the BST however
 void saveContact(const char* name, const char* phoneNum, const char* email) {
     //Open the files contacts.csv to append contact
-
     printf("%s\n", "-- Saving Contact... --");
 
+    //Gets the file pointer
     FILE *fPtr = NULL;
     fPtr = fopen("contacts.csv", "a");
-    if((fPtr = fopen("contacts.csv","a")) == NULL) return;
 
+    if(fPtr == NULL) return;
+
+    //Prints the contact values into the CSV
     fprintf(fPtr, "%s,%s,%s\n", name, phoneNum, email);
 
     fclose(fPtr);
 }
 
+//Loads the contacts form the CSV file into the BST
 void loadCSV(TreeNode** root, int* count) {
 
     char line[1024];
     FILE* fPtr = NULL;
     fPtr = fopen("contacts.csv", "r");
 
-    //Returns the function if file cant be opened
     if (fPtr == NULL) return;
 
     //Runs the while loop until fgets doesnt detect any more lines in the file
@@ -43,8 +45,10 @@ void loadCSV(TreeNode** root, int* count) {
 
         //Stores the index, name, phoneNum, email into a contact struct
         Contact* c = createContact(*count, name, phoneNum, email);
-        (*count)++;
         if (c == NULL) continue;
+
+        //Counts the value of contacts in the list for indexing
+        (*count)++;
 
         //Creates a node with c as the contact field        
         TreeNode* newNode = createNode(c);
@@ -58,30 +62,27 @@ void loadCSV(TreeNode** root, int* count) {
 
     }
 
-    //Closes file
     fclose(fPtr);
 }
 
+//Loop used in the updateCSV function, separated to prevent opening file multiple times during recursion
 void updateCSVLoop(TreeNode* root, FILE* fPtr) {
     if (root == NULL) return;
 
-    // Write left subtree
-    if (root->leftPtr != NULL) {
-        updateCSVLoop(root->leftPtr, fPtr);
-    }
+    //Recursively visits the left subtree
+    updateCSVLoop(root->leftPtr, fPtr);
 
     // Write the current node's contact information to the file
     fprintf(fPtr, "%s,%s,%s", root->contact->name, root->contact->phoneNum, root->contact->email);
 
-    // Write right subtree
-    if (root->rightPtr != NULL) {
-        updateCSVLoop(root->rightPtr, fPtr);
-    }
+    //Recursively visit the right subtree
+    updateCSVLoop(root->rightPtr, fPtr);
+
 }
 
+//Uses In-Order traversal to write the values in BST to CSV
+//Update the file after changes are made
 void updateCSV(TreeNode* root) {
-    //Uses In-Order traversal to write the values in BST to CSV
-    //Used to update the file after changes are made
 
     // Open the file for writing
     FILE* fPtr = fopen("contacts.csv", "w");
@@ -90,46 +91,45 @@ void updateCSV(TreeNode* root) {
     // Call the helper function to perform the in-order traversal
     updateCSVLoop(root, fPtr);
 
-    // Close the file after traversal is complete
     fclose(fPtr);
 }
 
-void displayCSV(TreeNode* root, int* count, int contactPerPage, int currentPage) {
-    // Base case
-    if (root == NULL) {
-        return;  
-    }
+//Display the contacts in the BST using inorder traversal
+void displayContacts(TreeNode* root, int* count, int contactPerPage, int currentPage) {
+    if (root == NULL) return;  
 
-    // Recursively visit the left subtree
-    displayCSV(root->leftPtr, count, contactPerPage, currentPage);
+    //Recursively visit the left subtree
+    displayContacts(root->leftPtr, count, contactPerPage, currentPage);
 
-    // Calculate the range of contacts for the current page
+    //Calculate the range of contacts for the current page
     int start = currentPage * contactPerPage;
     int end = start + contactPerPage;
 
-    // Print only if the current count is within the range for this page
+    //Removes the newline char from the email
+    root->contact->email[strcspn(root->contact->email, "\n")] = '\0';
+
+    //Print only if the current count is within the range for this page
     if (*count >= start && *count < end) {
-        printf("%d - %-39s%-21s%s",
-               *count + 1,  // Adjusted to display as 1-based index
+        printf("%d - %-39s%-21s%s\n",
+               *count + 1,
                root->contact->name,
                root->contact->phoneNum,
                root->contact->email);
     }
 
-    // Increment the count after visiting a node
+    root->contact->email[strcspn(root->contact->email, "\0")] = '\n';
+
+    //Counts the number of contacts in the list for indexing
     (*count)++;
 
-    // Recursively visit the right subtree
-    displayCSV(root->rightPtr, count, contactPerPage, currentPage);
+    //Recursively visit the right subtree
+    displayContacts(root->rightPtr, count, contactPerPage, currentPage);
 }
-
 
 // Function to update indices of all contacts in a single traversal
 int refreshIndex(TreeNode* root, int currentIndex) {
-    if (root == NULL) {
-        return currentIndex;  // Return the current index when tree node is null
-    }
-
+    if (root == NULL) return currentIndex;
+    
     // Recursively update the left subtree and get the next index
     currentIndex = refreshIndex(root->leftPtr, currentIndex);
 
@@ -141,13 +141,15 @@ int refreshIndex(TreeNode* root, int currentIndex) {
     return refreshIndex(root->rightPtr, currentIndex);
 }
 
-
+//Displays the menu and gets the user option
 int getOption(int currentOption, char input[10]) {
 
+    //Prints the menu display
     printf("%s\n", "------ Available Operations -----");
     printf("\033[36m%-9s\t%-9s\n%-9s\t%-9s\033[0m\n\n%-9s\n", "1.Save", "2.Edit", "3.Delete", "4.Search", "\033[33mPress '0' to Exit\033[0m");
     printf("%s\n? ", "---------------------------------");
 
+    //Gets the input from the user using input as buffer
     fgets(input, 10, stdin);
     currentOption = atoi(input);
 }

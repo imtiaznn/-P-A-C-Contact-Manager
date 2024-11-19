@@ -10,7 +10,7 @@ void updateCSVLoop(TreeNode* root, FILE* fPtr);
 
 void updateCSV(TreeNode* root);
 
-void displayCSV(TreeNode* root, int* count, int contactPerPage, int currentPage);
+void displayContacts(TreeNode* root, int* count, int contactPerPage, int currentPage);
 
 int refreshIndex(TreeNode* root, int currentIndex);
 
