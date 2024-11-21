@@ -23,19 +23,21 @@ int main() {
     TreeNode* root = NULL;
     TreeNode* targetNode = NULL;
 
-    //Variables currentOption for submenus during operations
-    int currentOption, 
+    //Buffers for receiving integer input option and string input options
+    char input[10];
+    char *buffer = malloc(100);
+
+    //Variables currentOption for menu options, count for counting contacts
+    int currentOption,
+        currentChoice,
         count = 0;
 
-    //Variables for handling app pagination
+    //Variables for handling app pagination and indexing
     int contactPerPage = 5,
         currentPage = 0,
         maxPage = 0,
         needRefreshIndex = 0;
 
-    //Buffers for receiving integer input option and string input options
-    char input[10];
-    char *buffer = malloc(100);
 
     //Load in data value from CSV into BST
     loadCSV(&root, &count);
@@ -53,7 +55,7 @@ int main() {
         //Display the contact list
         //Resets count to 0 so displayContacts can refresh the value
         count = 0;
-        displayContacts(root, &count, contactPerPage, currentPage);
+        displayContacts(root, &count, currentPage);
 
         printf("\nPAGE (%d/%d)\n", currentPage + 1, maxPage + 1);
         printf("\n%-61s%s\n\n", "<< (5) Previous Page", "(6) Next Page >>");
@@ -82,17 +84,9 @@ int main() {
                 }
 
                 //Receives input from the user, removing any newline characters
-                printf("%s\n", "(1/3) - Enter the name of the contact to be saved");
-                fgets(name, 100, stdin);
-                name[strcspn(name, "\n")] = '\0';
-
-                printf("%s\n", "(2/3) - Enter the phone number of the contact to be saved");
-                fgets(phoneNum, 100, stdin);
-                phoneNum[strcspn(phoneNum, "\n")] = '\0';
-
-                printf("%s\n", "(3/3) - Enter the email of the contact to be saved");
-                fgets(email, 100, stdin);
-                email[strcspn(email, "\n")] = '\0';
+                getInput(name, "(1/3) Enter the name of the contact to be saved\n?");
+                getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved\n?");
+                getInput(email, "(3/3) Enter the email of the contact to be saved\n?");
 
                 //Saves the contact to CSV
                 saveContact(name, phoneNum, email);
@@ -117,9 +111,7 @@ int main() {
             case OPTION_EDIT:
                 
                 //Receives input from the user, removing any newline characters
-                printf("%s", "(1/3) - Enter the name of the contact to be edited\n");
-                fgets(buffer, 100, stdin);
-                buffer[strcspn(buffer, "\n")] = '\0';
+                getInput(buffer, "(1/3) Enter the name of the contact to be edited\n?");
     
                 //Gets the node that needs to be edited
                 targetNode = searchNode(root, buffer);
@@ -128,17 +120,13 @@ int main() {
                 printf("\nEditing contact %s...\n", targetNode->contact->name);
 
                 //Receives input from the user, removing any newline characters
-                printf("%s", "(2/3) - Which part of the contact should be edited:\n(1) - Name\n(2) - Phone Number\n(3) - Email\n");
-                fgets(buffer, 100, stdin);
-                buffer[strcspn(buffer, "\n")] = '\0';
+                getInput(buffer, "(2/3) Which value would you like to edit? Enter the index of the selected option:\n1 - Name\n2 - Phone Number\n3 - Email\n");
 
                 //Gets choice from user
-                int currentChoice = atoi(buffer);
+                currentChoice = atoi(buffer);
 
                 //Receives input from the user, removing any newline characters
-                printf("%s", "(3/3) - Enter the value to replace the existing value\n");
-                fgets(buffer, 100, stdin);
-                buffer[strcspn(buffer, "\n")] = '\0';
+                getInput(buffer, "(3/3) Enter the value to replace the existing value\n");
 
                 //Replaces the selected value with new value
                 //Only replaces in BST and not CSV
@@ -159,9 +147,9 @@ int main() {
             case OPTION_DELETE:
 
                 //Receives input from the user, removing any newline characters
-                printf("%s\n", "(1/2) - Enter the name of the contact to be deleted");
-                fgets(buffer, 100, stdin);
-                buffer[strcspn(buffer, "\n")] = '\0';
+                getInput(buffer, "(1/2) Enter the name of the contact to be deleted");
+
+                //Asks the user if they want to confirm deletion
 
                 //Deletes the contact that the user has selected
                 root = deleteContact(root, buffer);
@@ -173,6 +161,17 @@ int main() {
                 break;
 
             case OPTION_SEARCH:
+
+                char* filter = malloc(100);
+
+                getInput(buffer, "Which criteria will you be searching with:\n1.Name\n2.Phone Number\n3.Email");
+
+                currentChoice = atoi(buffer);
+
+                if (currentChoice == 1) {
+
+                } 
+
 
                 break;
             

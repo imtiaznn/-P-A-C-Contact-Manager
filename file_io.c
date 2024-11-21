@@ -3,6 +3,7 @@
 #include <string.h>
 #include "structs.h"
 #include "utils.h"
+#define CONTACTPERPAGE 5
 
 //Saves a contact into the CSV file, does not save it into the BST however
 void saveContact(const char* name, const char* phoneNum, const char* email) {
@@ -95,15 +96,15 @@ void updateCSV(TreeNode* root) {
 }
 
 //Display the contacts in the BST using inorder traversal
-void displayContacts(TreeNode* root, int* count, int contactPerPage, int currentPage) {
-    if (root == NULL) return;  
+void displayContacts(TreeNode* root, int* count, int currentPage) {
+    if (root == NULL) return;
 
     //Recursively visit the left subtree
-    displayContacts(root->leftPtr, count, contactPerPage, currentPage);
+    displayContacts(root->leftPtr, count, currentPage);
 
     //Calculate the range of contacts for the current page
-    int start = currentPage * contactPerPage;
-    int end = start + contactPerPage;
+    int start = currentPage * CONTACTPERPAGE;
+    int end = start + CONTACTPERPAGE;
 
     //Removes the newline char from the email
     root->contact->email[strcspn(root->contact->email, "\n")] = '\0';
@@ -123,7 +124,7 @@ void displayContacts(TreeNode* root, int* count, int contactPerPage, int current
     (*count)++;
 
     //Recursively visit the right subtree
-    displayContacts(root->rightPtr, count, contactPerPage, currentPage);
+    displayContacts(root->rightPtr, count, currentPage);
 }
 
 // Function to update indices of all contacts in a single traversal
@@ -152,4 +153,10 @@ int getOption(int currentOption, char input[10]) {
     //Gets the input from the user using input as buffer
     fgets(input, 10, stdin);
     currentOption = atoi(input);
+}
+
+void getInput(char* buffer, const char* message) {
+    printf("%s", message);
+    fgets(buffer, 100, stdin);
+    buffer[strcspn(buffer, "\n")] = '\0';
 }

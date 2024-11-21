@@ -10,10 +10,12 @@ void updateCSVLoop(TreeNode* root, FILE* fPtr);
 
 void updateCSV(TreeNode* root);
 
-void displayContacts(TreeNode* root, int* count, int contactPerPage, int currentPage);
+void displayContacts(TreeNode* root, int* count, int currentPage);
 
 int refreshIndex(TreeNode* root, int currentIndex);
 
 int getOption(int currentOption, char input[10]);
+
+void getInput(char* buffer, const char* message);
 
 #endif
