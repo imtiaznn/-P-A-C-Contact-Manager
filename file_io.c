@@ -96,11 +96,11 @@ void updateCSV(TreeNode* root) {
 }
 
 //Display the contacts in the BST using inorder traversal
-void displayContacts(TreeNode* root, int* count, int currentPage) {
+void displayContacts(TreeNode* root, int currentPage) {
     if (root == NULL) return;
 
     //Recursively visit the left subtree
-    displayContacts(root->leftPtr, count, currentPage);
+    displayContacts(root->leftPtr, currentPage);
 
     //Calculate the range of contacts for the current page
     int start = currentPage * CONTACTPERPAGE;
@@ -110,21 +110,19 @@ void displayContacts(TreeNode* root, int* count, int currentPage) {
     root->contact->email[strcspn(root->contact->email, "\n")] = '\0';
 
     //Print only if the current count is within the range for this page
-    if (*count >= start && *count < end) {
+    if (start <= root->contact->index && root->contact->index < end) {
         printf("%d - %-39s%-21s%s\n",
-               *count + 1,
+               root->contact->index+1,
                root->contact->name,
                root->contact->phoneNum,
                root->contact->email);
     }
 
+    //Adds the newline back to the contact
     root->contact->email[strcspn(root->contact->email, "\0")] = '\n';
 
-    //Counts the number of contacts in the list for indexing
-    (*count)++;
-
     //Recursively visit the right subtree
-    displayContacts(root->rightPtr, count, currentPage);
+    displayContacts(root->rightPtr, currentPage);
 }
 
 // Function to update indices of all contacts in a single traversal

@@ -55,7 +55,7 @@ int main() {
         //Display the contact list
         //Resets count to 0 so displayContacts can refresh the value
         count = 0;
-        displayContacts(root, &count, currentPage);
+        displayContacts(root, currentPage);
 
         printf("\nPAGE (%d/%d)\n", currentPage + 1, maxPage + 1);
         printf("\n%-61s%s\n\n", "<< (5) Previous Page", "(6) Next Page >>");
