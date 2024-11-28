@@ -4,18 +4,18 @@
 
 void saveContact(const char* name, const char* phoneNum, const char* email);
 
-void loadCSV(TreeNode** root, int* count);
+int loadCSV(TreeNode** root, int* count);
 
-void updateCSVLoop(TreeNode* root, FILE* fPtr);
+int updateCSVLoop(TreeNode* root, FILE* fPtr);
 
-void updateCSV(TreeNode* root);
+int updateCSV(TreeNode* root);
 
-void displayContacts(TreeNode* root, int currentPage);
+void displayContacts(TreeNode* root, int currentPage, const char query[100]);
 
 int refreshIndex(TreeNode* root, int currentIndex);
 
 int getOption(int currentOption, char input[10]);
 
-void getInput(char* buffer, const char* message);
+void getInput(char* input, const char* message);
 
 #endif

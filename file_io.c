@@ -23,13 +23,13 @@ void saveContact(const char* name, const char* phoneNum, const char* email) {
 }
 
 //Loads the contacts form the CSV file into the BST
-void loadCSV(TreeNode** root, int* count) {
+int loadCSV(TreeNode** root, int* count) {
 
     char line[1024];
     FILE* fPtr = NULL;
     fPtr = fopen("contacts.csv", "r");
 
-    if (fPtr == NULL) return;
+    if (fPtr == NULL) return -1;
 
     //Runs the while loop until fgets doesnt detect any more lines in the file
     while(fgets(line, sizeof(line), fPtr)) {
@@ -41,12 +41,17 @@ void loadCSV(TreeNode** root, int* count) {
 
         //Checks for any NULL cases while parsing csv file
         if (name == NULL || phoneNum == NULL || email == NULL) {
+            printf("(loadCSV) Malformed line in CSV: %s\n", line);
             continue;
         }
 
         //Stores the index, name, phoneNum, email into a contact struct
         Contact* c = createContact(*count, name, phoneNum, email);
-        if (c == NULL) continue;
+        if (c == NULL) {
+            printf("(loadCSV): Failed to allocate memory for contact");
+            continue;
+        } 
+            
 
         //Counts the value of contacts in the list for indexing
         (*count)++;
@@ -54,6 +59,7 @@ void loadCSV(TreeNode** root, int* count) {
         //Creates a node with c as the contact field        
         TreeNode* newNode = createNode(c);
         if (newNode == NULL) {
+            printf("(loadCSV): Failed to create node for contact");
             free(c);
             continue;
         }
@@ -64,11 +70,12 @@ void loadCSV(TreeNode** root, int* count) {
     }
 
     fclose(fPtr);
+    return 0;
 }
 
 //Loop used in the updateCSV function, separated to prevent opening file multiple times during recursion
-void updateCSVLoop(TreeNode* root, FILE* fPtr) {
-    if (root == NULL) return;
+int updateCSVLoop(TreeNode* root, FILE* fPtr) {
+    if (root == NULL) return -1;
 
     //Recursively visits the left subtree
     updateCSVLoop(root->leftPtr, fPtr);
@@ -79,50 +86,90 @@ void updateCSVLoop(TreeNode* root, FILE* fPtr) {
     //Recursively visit the right subtree
     updateCSVLoop(root->rightPtr, fPtr);
 
+    return 0;
 }
 
 //Uses In-Order traversal to write the values in BST to CSV
 //Update the file after changes are made
-void updateCSV(TreeNode* root) {
+int updateCSV(TreeNode* root) {
 
     // Open the file for writing
     FILE* fPtr = fopen("contacts.csv", "w");
-    if (fPtr == NULL) return;
+    if (fPtr == NULL) return -1;
 
     // Call the helper function to perform the in-order traversal
-    updateCSVLoop(root, fPtr);
+    if (updateCSVLoop(root, fPtr) == -1) {
+        return -1;
+    }
 
     fclose(fPtr);
+    return 0;
 }
 
 //Display the contacts in the BST using inorder traversal
-void displayContacts(TreeNode* root, int currentPage) {
+void displayContacts(TreeNode* root, int currentPage, const char query[100]) {
     if (root == NULL) return;
 
+    static int matchesFound = 0;
+
     //Recursively visit the left subtree
-    displayContacts(root->leftPtr, currentPage);
+    displayContacts(root->leftPtr, currentPage, query);
 
     //Calculate the range of contacts for the current page
     int start = currentPage * CONTACTPERPAGE;
     int end = start + CONTACTPERPAGE;
 
+    //Flag for matches when searching contacts
+
     //Removes the newline char from the email
     root->contact->email[strcspn(root->contact->email, "\n")] = '\0';
 
-    //Print only if the current count is within the range for this page
-    if (start <= root->contact->index && root->contact->index < end) {
-        printf("%d - %-39s%-21s%s\n",
-               root->contact->index+1,
-               root->contact->name,
-               root->contact->phoneNum,
-               root->contact->email);
+    //Checks if any query searches are being made beofehand
+    if (strlen(query) != 0) {
+
+        //Flag for matches in a contact
+        int match = 0; 
+
+        if (strcmp(root->contact->name, query) == 0) match = 1;
+
+        //Indicates that a contact matches the query and will be printed
+        if (match) {
+            printf("%d - %-39s%-21s%s",
+            root->contact->index + 1,
+            root->contact->name,
+            root->contact->phoneNum,
+            root->contact->email);
+
+            matchesFound = 1;
+        }
+
+
+    } else {
+
+        //Displays the all the contacts if there is no search query        
+        if (root->contact->index >= start && root->contact->index < end) {
+            printf("%-2d - %-39s%-21s%s\n",
+                root->contact->index + 1,
+                root->contact->name,
+                root->contact->phoneNum,
+                root->contact->email);
+        }
+
     }
 
+    
     //Adds the newline back to the contact
     root->contact->email[strcspn(root->contact->email, "\0")] = '\n';
 
     //Recursively visit the right subtree
-    displayContacts(root->rightPtr, currentPage);
+    displayContacts(root->rightPtr, currentPage, query);
+
+    if (root->rightPtr == NULL && root->leftPtr == NULL && strlen(query) != 0 && matchesFound == 0) {
+        printf("No contact found matching the query.\n");
+        matchesFound = 0;  
+    }
+
+    matchesFound = 0;
 }
 
 // Function to update indices of all contacts in a single traversal
@@ -134,6 +181,9 @@ int refreshIndex(TreeNode* root, int currentIndex) {
 
     // Assign the current index to the contact
     root->contact->index = currentIndex;
+
+    // printf("printing currentIndex: %d, contactIndex: %d\n", currentIndex, root->contact->index);
+
     currentIndex++;  // Increment the index for the next contact
 
     // Recursively update the right subtree and return the final index
@@ -150,11 +200,16 @@ int getOption(int currentOption, char input[10]) {
 
     //Gets the input from the user using input as buffer
     fgets(input, 10, stdin);
+    if (!isInteger(input)) {
+        printf("(getInput) Invalid input, please enter an integer\n");
+        return -1;
+    }
+
     currentOption = atoi(input);
 }
 
-void getInput(char* buffer, const char* message) {
+void getInput(char* input, const char* message) {
     printf("%s", message);
-    fgets(buffer, 100, stdin);
-    buffer[strcspn(buffer, "\n")] = '\0';
+    fgets(input, 100, stdin);
+    input[strcspn(input, "\n")] = '\0';
 }

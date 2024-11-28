@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "structs.h"
 
 void freeContact(Contact* contact) {
@@ -140,4 +141,141 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
     }
 
     return root;
+}
+
+int isInteger(const char* input) {
+    if (strlen(input) == 0) return 0;
+
+    for(int i = 0 ; i < strlen(input) - 1; i++) {
+        if (!isdigit(input[i])) return 0;
+    }
+
+    return 1;
+}
+
+int isValidPhoneNumber(const char* input) {
+
+    char prefix[] = "+60";
+
+    //Checks if the input is within valid Malaysian phone length 
+    if (strlen(input) < 11 || strlen(input) > 14) {
+        return 0;
+    }
+
+    //Checks if the input has the same prefix as required
+    if (strncmp(input, prefix, 3) != 0) {
+        return 0;
+    }
+
+    //Ensures all characters are digits
+    for(int i = 3; i < strlen(input); i++) {
+        if (!isdigit(input[i])) {
+            return 0;
+        }
+    }
+
+    return 1;
+
+}
+
+int isValidEmailAddress(const char* input) {
+    char *str1, *str2;
+    char specialChar[] = {'!', '#', '$', '%', '&', '\'', '*', '+', '-', '/', '=', '?', '^', '_', '{', '|', '}', '~'};
+    
+    //Duplicate the string
+    char *str = strdup(input);
+    if (str == NULL) return 0;
+
+    //Separate string into user part and domain part
+    str1 = strtok(str, "@");
+    str2 = strtok(NULL, "@");
+
+    if (str1 == NULL || str2 == NULL) {
+        free(str);
+        return 0;
+    }
+
+    //Validate user part
+    for (int i = 0; i < strlen(str1); i++) {
+        if (!isalnum(str1[i]) && str1[i] != '.') {
+            int valid = 0;
+
+            //Check if character is a special character
+            for (int j = 0; j < sizeof(specialChar) / sizeof(char); j++) {
+                if (str1[i] == specialChar[j]) {
+                    valid = 1;
+                    break;
+                }
+            }
+
+            if (!valid) {
+                free(str);
+                return 0;
+            }
+        }
+
+        //Check for consecutive dots or beginnings and endings with a dot
+        if (str1[i] == '.') {
+            if (i == 0 || i == strlen(str1) - 1 || str1[i - 1] == '.') {
+                free(str);
+                return 0;
+            }
+        }
+    }
+
+    //Validate the domain part
+    if (strchr(str2, '.') == NULL) {
+        free(str);
+        return 0;
+    }
+
+    for (int i = 0; i < strlen(str2); i++) {
+        if (!isalnum(str2[i]) && str2[i] != '.' && str2[i] != '-') {
+            free(str);
+            return 0;
+        }
+    
+
+        //Check for consecutive dots or hyphens and beginnings and endings with them
+        if (str2[i] == '.' || str2[i] == '-') {
+            //Check for beginnings and endings with dot or hyphen
+            if (i == 0 || i == strlen(str2) - 1) {
+                free(str);
+                return 0;
+            }
+
+            //Check for consecutive dots or hyphen
+            if (str2[i - 1] == '.' || str2[i - 1] == '-') {
+                free(str);
+                return 0;
+            }
+        }
+    }
+
+
+    free(str);
+    return 1;
+}
+
+int isDuplicate(const char* input, TreeNode* root) {
+
+    //Base case for recursion
+    if (root == NULL) return 0;
+
+    //Checks the right subtree
+    if (isDuplicate(input, root->rightPtr)) {
+        return 1;
+    }
+
+    //Checks the current node
+    if (strcmp(root->contact->name, input) == 0) {
+        return 1; // Duplicate found at this node
+    }
+
+    //Checks the left subtree
+    if (isDuplicate(input, root->leftPtr)) {
+        return 1;
+    }
+
+    return 0;
 }

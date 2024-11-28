@@ -16,6 +16,22 @@ typedef enum  {
     OPTION_NEXT
 } Option;
 
+typedef enum {
+    ERROR_ALLOCATION_FAILED
+} Error;
+
+const char* getErrorMsg[] = {
+    "(main) Could not allocate memory",
+    "(main) Could not load contacts",
+    "(main) Could not update data into CSV",
+    "(main) Could not refresh index",
+    "(Error) Empty searches are not allowed",
+    "(Error) Invalid operation. Please try again",
+    "(Error) Duplicate values are not allowed",
+    "(Error) Invalid phone number, please try again",
+    "(Error) Invalid email address, please try again"
+};
+
 int main() {
 
     //Variables root to represent the binary search tree
@@ -26,6 +42,11 @@ int main() {
     //Buffers for receiving integer input option and string input options
     char input[10];
     char *buffer = malloc(100);
+    if (buffer == NULL){
+        printf(getErrorMsg[0]);
+        exit(1);
+    }
+        
 
     //Variables currentOption for menu options, count for counting contacts
     int currentOption,
@@ -38,14 +59,21 @@ int main() {
         maxPage = 0,
         needRefreshIndex = 0;
 
+    //Handles queries and searches
+    char query[100] = "";
 
     //Load in data value from CSV into BST
-    loadCSV(&root, &count);
+    if(loadCSV(&root, &count) == -1) {
+        printf(getErrorMsg[1]);
+        exit(1);
+    }
 
     //Sets the maximum number of pages
     maxPage = ceil((count-1)/contactPerPage);
 
     while(1) {
+
+        refreshIndex(root, 0);
 
         //Prints the application's header
         printf("%s\n", "----------------------------- Contact List ---------------------------------");
@@ -53,9 +81,7 @@ int main() {
         printf("%s\n", "----------------------------------------------------------------------------");
         
         //Display the contact list
-        //Resets count to 0 so displayContacts can refresh the value
-        count = 0;
-        displayContacts(root, currentPage);
+        displayContacts(root, currentPage, query);
 
         printf("\nPAGE (%d/%d)\n", currentPage + 1, maxPage + 1);
         printf("\n%-61s%s\n\n", "<< (5) Previous Page", "(6) Next Page >>");
@@ -77,6 +103,8 @@ int main() {
 
                 //Checks if malloc() is successfull to prevent crashes
                 if (name == NULL || phoneNum == NULL || email == NULL) {
+                    printf(getErrorMsg[0]);
+
                     free(name);
                     free(phoneNum);
                     free(email);
@@ -85,8 +113,28 @@ int main() {
 
                 //Receives input from the user, removing any newline characters
                 getInput(name, "(1/3) Enter the name of the contact to be saved\n?");
+                if(isDuplicate(name, root)) {
+                    printf("%s\n", getErrorMsg[6]);
+                    free(name);
+                    break;
+                }
+
                 getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved\n?");
+                if(!isValidPhoneNumber(phoneNum)) {
+                    printf("%s\n", getErrorMsg[7]);
+                    free(name);
+                    free(phoneNum);
+                    break;
+                }
+
                 getInput(email, "(3/3) Enter the email of the contact to be saved\n?");
+                if(!isValidEmailAddress(email)) {
+                    printf("%s\n", getErrorMsg[8]);
+                    free(name);
+                    free(phoneNum);
+                    free(email);
+                    break;
+                }
 
                 //Saves the contact to CSV
                 saveContact(name, phoneNum, email);
@@ -94,7 +142,7 @@ int main() {
                 //Sets the refresh flag
                 needRefreshIndex = 1;
 
-                //Creats a contact struct and TreeNode in order to update BST
+                //Saves the contact to BST
                 Contact* c = createContact(count, name, phoneNum, email);
                 TreeNode* cNode = createNode(c);
                 root = insertNode(root, cNode);
@@ -130,15 +178,15 @@ int main() {
 
                 //Replaces the selected value with new value
                 //Only replaces in BST and not CSV
-                if(currentChoice==1) {
-                    strcpy(targetNode->contact->name, buffer);
-                }
-                if(currentChoice==2) {
-                    strcpy(targetNode->contact->phoneNum, buffer);
-                }  
-                if(currentChoice==3) {
-                    strcpy(targetNode->contact->email, buffer);
-                }
+                    if(currentChoice==1) {
+                        strcpy(targetNode->contact->name, buffer);
+                    }
+                    if(currentChoice==2) {
+                        strcpy(targetNode->contact->phoneNum, buffer);
+                    }  
+                    if(currentChoice==3) {
+                        strcpy(targetNode->contact->email, buffer);
+                    }
 
                 //Sets the refresh flag
                 needRefreshIndex = 1;
@@ -162,16 +210,12 @@ int main() {
 
             case OPTION_SEARCH:
 
-                char* filter = malloc(100);
+                getInput(query, "Enter search query:\n? ");
 
-                getInput(buffer, "Which criteria will you be searching with:\n1.Name\n2.Phone Number\n3.Email");
-
-                currentChoice = atoi(buffer);
-
-                if (currentChoice == 1) {
-
-                } 
-
+                if(strlen(query) == 0) {
+                    printf(getErrorMsg[4]);
+                    break;
+                }
 
                 break;
             
@@ -191,19 +235,25 @@ int main() {
                 break;
 
             default:
-
+                printf("%s\n", getErrorMsg[5]);
                 break;
         }
 
-        if (needRefreshIndex) {
+        if (needRefreshIndex == 1) {
             //Refreshes the index of the contact list
-            refreshIndex(root, 1);
+            refreshIndex(root, 0);
             needRefreshIndex = 0; 
         }
     }
 
     //Updates the CSV everytime the program is closed
-    updateCSV(root);
+    if (updateCSV(root) == -1) {
+        printf(getErrorMsg[2]);
+    }
+
+    free(buffer);
+    //Make function to free entire tree
+    free(root);
 
     return 0;
 }
