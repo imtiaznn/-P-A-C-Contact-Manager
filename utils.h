@@ -11,7 +11,7 @@ TreeNode* insertNode(TreeNode* root, TreeNode* newNode);
 
 TreeNode* searchNode(TreeNode* root, const char* name);
 
-int updateCSVLoop(TreeNode* root, FILE* fPtr);
+int updateCSVHelper(TreeNode* root, FILE* fPtr);
 
 int updateCSV(TreeNode* root);
 
@@ -26,5 +26,7 @@ int isValidPhoneNumber(const char* input);
 int isValidEmailAddress(const char* input);
 
 int isDuplicate(const char* input, TreeNode* root);
+
+void editContact(TreeNode* root, const char* keyName, const char* name, const char* phoneNum, const char* email);
 
 #endif

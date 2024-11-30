@@ -6,11 +6,13 @@ void saveContact(const char* name, const char* phoneNum, const char* email);
 
 int loadCSV(TreeNode** root, int* count);
 
-int updateCSVLoop(TreeNode* root, FILE* fPtr);
+int updateCSVHelper(TreeNode* root, FILE* fPtr);
 
 int updateCSV(TreeNode* root);
 
-void displayContacts(TreeNode* root, int currentPage, const char query[100]);
+void displayContacts(TreeNode* root, int currentPage, const char query[100], int* count);
+
+void displayContactsHelper(TreeNode* root, int currentPage, const char query[100], int* matched, int* count);
 
 int refreshIndex(TreeNode* root, int currentIndex);
 

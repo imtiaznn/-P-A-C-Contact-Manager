@@ -104,10 +104,15 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
 
     // Compare the name with the current node's contact name
     if (strcmp(name, root->contact->name) < 0) {
+
         root->leftPtr = deleteContact(root->leftPtr, name);
+    
     } else if (strcmp(name, root->contact->name) > 0) {
+    
         root->rightPtr = deleteContact(root->rightPtr, name);
+    
     } else {
+        
         // Node to be deleted found
         printf("Contact '%s' found. Deleting...\n", name);
 
@@ -141,6 +146,20 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
     }
 
     return root;
+}
+
+void editContact(TreeNode* root, const char* keyName, const char* name, const char* phoneNum, const char* email) {
+    TreeNode* oldNode = searchNode(root, keyName);
+    if (oldNode == NULL) {
+        printf("(editContact) Contact not found.\n");
+        return;
+    }
+
+    TreeNode* newNode = createNode(createContact(oldNode->contact->index, name, phoneNum, email));
+
+    deleteContact(root, keyName);
+
+    insertNode(root, newNode);
 }
 
 int isInteger(const char* input) {

@@ -3,7 +3,7 @@
 #include <string.h>
 #include "structs.h"
 #include "utils.h"
-#define CONTACTPERPAGE 5
+#define CONTACT_PER_PAGE 5
 
 //Saves a contact into the CSV file, does not save it into the BST however
 void saveContact(const char* name, const char* phoneNum, const char* email) {
@@ -37,7 +37,7 @@ int loadCSV(TreeNode** root, int* count) {
         //Parses CSV file using commas as delimiters
         char* name = strtok(line, ",");
         char* phoneNum = strtok(NULL, ",");
-        char* email = strtok(NULL, ",");
+        char* email = strtok(NULL, "\n");
 
         //Checks for any NULL cases while parsing csv file
         if (name == NULL || phoneNum == NULL || email == NULL) {
@@ -74,17 +74,21 @@ int loadCSV(TreeNode** root, int* count) {
 }
 
 //Loop used in the updateCSV function, separated to prevent opening file multiple times during recursion
-int updateCSVLoop(TreeNode* root, FILE* fPtr) {
-    if (root == NULL) return -1;
+int updateCSVHelper(TreeNode* root, FILE* fPtr) {
+    if (root == NULL) return 0;
 
     //Recursively visits the left subtree
-    updateCSVLoop(root->leftPtr, fPtr);
+    updateCSVHelper(root->leftPtr, fPtr);
+
+    char email[strlen(root->contact->email) + 1];
+    strcpy(email, root->contact->email);
+    email[strcspn(email, "\n")] = '\0';
 
     // Write the current node's contact information to the file
-    fprintf(fPtr, "%s,%s,%s", root->contact->name, root->contact->phoneNum, root->contact->email);
+    fprintf(fPtr, "%s,%s,%s\n", root->contact->name, root->contact->phoneNum, email);
 
     //Recursively visit the right subtree
-    updateCSVLoop(root->rightPtr, fPtr);
+    updateCSVHelper(root->rightPtr, fPtr);
 
     return 0;
 }
@@ -98,7 +102,7 @@ int updateCSV(TreeNode* root) {
     if (fPtr == NULL) return -1;
 
     // Call the helper function to perform the in-order traversal
-    if (updateCSVLoop(root, fPtr) == -1) {
+    if (updateCSVHelper(root, fPtr) == -1) {
         return -1;
     }
 
@@ -106,70 +110,80 @@ int updateCSV(TreeNode* root) {
     return 0;
 }
 
-//Display the contacts in the BST using inorder traversal
-void displayContacts(TreeNode* root, int currentPage, const char query[100]) {
+//Helper functin to display the contacts in the BST
+void displayContactsHelper(TreeNode* root, int currentPage, const char query[100], int* matched, int* count) {
     if (root == NULL) return;
 
-    static int matchesFound = 0;
+    // Recursively visit the left subtree
+    displayContactsHelper(root->leftPtr, currentPage, query, matched, count);
 
-    //Recursively visit the left subtree
-    displayContacts(root->leftPtr, currentPage, query);
+    // Calculate the range of contacts for the current page
+    int start = currentPage * CONTACT_PER_PAGE;
+    int end = start + CONTACT_PER_PAGE;
 
-    //Calculate the range of contacts for the current page
-    int start = currentPage * CONTACTPERPAGE;
-    int end = start + CONTACTPERPAGE;
+    //Makes a duplicate of the email to remove the newline character on display
+    char email[strlen(root->contact->email) + 1];
+    strcpy(email, root->contact->email);
+    email[strcspn(email, "\n")] = '\0';
 
-    //Flag for matches when searching contacts
-
-    //Removes the newline char from the email
-    root->contact->email[strcspn(root->contact->email, "\n")] = '\0';
-
-    //Checks if any query searches are being made beofehand
+    // Checks if any query searches are being made beforehand
     if (strlen(query) != 0) {
 
-        //Flag for matches in a contact
-        int match = 0; 
+        if (strcmp(root->contact->name, query) != 0) {
+            //Skip the current contact if it does not match the query
+        } else {
+            *matched = 1;
 
-        if (strcmp(root->contact->name, query) == 0) match = 1;
+            // Indicates that a contact matches the query and will be printed
+            if (*matched) {
+                printf("%d - %-39s%-21s%s\n",
+                root->contact->index + 1,
+                root->contact->name,
+                root->contact->phoneNum,
+                email);
 
-        //Indicates that a contact matches the query and will be printed
-        if (match) {
-            printf("%d - %-39s%-21s%s",
-            root->contact->index + 1,
-            root->contact->name,
-            root->contact->phoneNum,
-            root->contact->email);
-
-            matchesFound = 1;
+                (*count)++;
+            }
         }
-
 
     } else {
 
-        //Displays the all the contacts if there is no search query        
+        // Displays the all the contacts if there is no search query        
         if (root->contact->index >= start && root->contact->index < end) {
             printf("%-2d - %-39s%-21s%s\n",
                 root->contact->index + 1,
                 root->contact->name,
                 root->contact->phoneNum,
-                root->contact->email);
+                email);
         }
 
+        (*count)++;
     }
 
-    
-    //Adds the newline back to the contact
-    root->contact->email[strcspn(root->contact->email, "\0")] = '\n';
+    // Recursively visit the right subtree
+    displayContactsHelper(root->rightPtr, currentPage, query, matched, count);  
+}
 
-    //Recursively visit the right subtree
-    displayContacts(root->rightPtr, currentPage, query);
-
-    if (root->rightPtr == NULL && root->leftPtr == NULL && strlen(query) != 0 && matchesFound == 0) {
-        printf("No contact found matching the query.\n");
-        matchesFound = 0;  
+//Display the contacts in the BST using inorder traversal
+void displayContacts(TreeNode* root, int currentPage, const char query[100], int* count) {
+    if (root == NULL) {
+        printf("No contacts found\n");
+        return;
     }
 
-    matchesFound = 0;
+    int matched = 0;
+    *count = 0;
+
+    displayContactsHelper(root, currentPage, query, &matched, count);
+
+    //Prints the message if no contact is found
+    if (matched == 0 && strlen(query) != 0) {
+        printf("\nNo contacts found matching %s...\n", query);
+    }
+
+    if (*count != 0) {
+        printf("\nThere are %d contacts found", *count);
+    }
 }
 
 // Function to update indices of all contacts in a single traversal
