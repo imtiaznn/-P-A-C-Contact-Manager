@@ -10,9 +10,9 @@ int updateCSVHelper(TreeNode* root, FILE* fPtr);
 
 int updateCSV(TreeNode* root);
 
-void displayContacts(TreeNode* root, int currentPage, const char query[100], int* count);
+void displayContacts(TreeNode* root, int currentPage, const char query[100], int* count, int mode);
 
-void displayContactsHelper(TreeNode* root, int currentPage, const char query[100], int* matched, int* count);
+void displayContactsHelper(TreeNode* root, int currentPage, const char query[100], int* matched, int* count, int mode);
 
 int refreshIndex(TreeNode* root, int currentIndex);
 

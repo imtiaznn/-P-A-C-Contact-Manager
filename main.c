@@ -17,7 +17,8 @@ typedef enum  {
     OPTION_DELETE,
     OPTION_SEARCH,
     OPTION_PREV,
-    OPTION_NEXT
+    OPTION_NEXT,
+    OPTION_TOGGLESORT
 } Option;
 
 typedef enum {
@@ -25,16 +26,16 @@ typedef enum {
 } Error;
 
 const char* getErrorMsg[] = {
-    "(main) Could not allocate memory",
-    "(main) There are currently no contacts to be loaded",
-    "(main) Could not update data into CSV",
-    "(main) Could not refresh index",
-    "(Error) Empty searches are not allowed",
-    "(Error) Invalid operation. Please try again",
-    "(Error) Duplicate values are not allowed",
-    "(Error) Invalid phone number, please try again",
-    "(Error) Invalid email address, please try again",
-    "(Error) Unable to find contact"
+    "\033[1;31m(main) Could not allocate memory\033[0m",
+    "\033[1;31m(main) There are currently no contacts to be loaded\033[0m",
+    "\033[1;31m(main) Could not update data into CSV\033[0m",
+    "\033[1;31m(main) Could not refresh index\033[0m",
+    "\033[1;31m(Error) Empty searches are not allowed\033[0m",
+    "\033[1;31m(Error) Invalid option. Please try again\033[0m",
+    "\033[1;31m(Error) Duplicate values are not allowed\033[0m",
+    "\033[1;31m(Error) Invalid phone number, please try again\033[0m",
+    "\033[1;31m(Error) Invalid email address, please try again\033[0m",
+    "\033[1;31m(Error) Unable to find contact\033[0m"
 };
 
 int main() {
@@ -50,7 +51,6 @@ int main() {
         printf("%s\n",getErrorMsg[0]);
         exit(1);
     }
-        
 
     //Variables currentOption for menu options, count for counting contacts
     int currentOption = 0,
@@ -60,7 +60,8 @@ int main() {
     //Variables for handling app pagination and indexing
     int currentPage = 0,
         maxPage = 0,
-        needRefreshIndex = 0;
+        needRefreshIndex = 0,
+        mode = 0;
 
     //Handles queries and searches
     char query[QUERY_SIZE] = "";
@@ -79,7 +80,7 @@ int main() {
         printf("%s\n", "----------------------------------------------------------------------------");
         
         //Display the contact list
-        displayContacts(root, currentPage, query, &count);
+        displayContacts(root, currentPage, query, &count, mode);
 
         //Sets the maximum number of pages
         maxPage = (int) ceil( (double) count / CONTACT_PER_PAGE) - 1;
@@ -148,7 +149,6 @@ int main() {
                 TreeNode* cNode = createNode(c);
                 root = insertNode(root, cNode);
                 
-                printf("%s\n", "-- Contact information has been saved successfully --");
 
                 //Frees allocated memory
                 free(name);
@@ -211,9 +211,9 @@ int main() {
                 getInput(confirmBuffer, "This process is NOT reversible.\n? ");
                 if (strcasecmp(confirmBuffer, "Y") == 0) {
                     // Perform the update
-                    if (currentChoice == 1) editContact(root, editedNode->contact->name, buffer, editedNode->contact->phoneNum, editedNode->contact->email);
-                    else if (currentChoice == 2) editContact(root, editedNode->contact->name, editedNode->contact->name, buffer, editedNode->contact->email);
-                    else if (currentChoice == 3) editContact(root, editedNode->contact->name, editedNode->contact->name, editedNode->contact->phoneNum, buffer);
+                    if (currentChoice == 1) editContact(&root, editedNode->contact->name, buffer, editedNode->contact->phoneNum, editedNode->contact->email);
+                    else if (currentChoice == 2) editContact(&root, editedNode->contact->name, editedNode->contact->name, buffer, editedNode->contact->email);
+                    else if (currentChoice == 3) editContact(&root, editedNode->contact->name, editedNode->contact->name, editedNode->contact->phoneNum, buffer);
 
                     printf("Contact updated successfully.\n");
                     needRefreshIndex = 1; // Flag for reloading index or CSV
@@ -262,17 +262,19 @@ int main() {
                 getInput(query, "Enter search query:\n? ");
 
                 if(strlen(query) == 0) {
-                    printf(getErrorMsg[4]);
+                    printf("%s\n", getErrorMsg[4]);
                     break;
                 }
 
                 break;
-            
+
             case OPTION_PREV:
 
                 if(currentPage > 0) {
                     //Decrements the current page
                     currentPage--;
+                } else {
+                    printf("You are already on the first page\n");
                 }
                 break;
             case OPTION_NEXT:
@@ -280,7 +282,21 @@ int main() {
                 if (currentPage < maxPage) {
                     //Increments the current page
                     currentPage++;
+                } else {
+                    printf("You are already on the last page\n");
                 }
+                break;
+
+            case OPTION_TOGGLESORT:
+
+                getInput(buffer, "Enter the index of the selected option (Press 0 or 1):\n0. Sort by Name\n1. Sort by Phone Number\n2. Sort by Email\n? ");
+
+                if( !isInteger(buffer) ) {
+                    printf("%s\n", getErrorMsg[5]);
+                }
+
+                mode = atoi(buffer);
+
                 break;
 
             default:

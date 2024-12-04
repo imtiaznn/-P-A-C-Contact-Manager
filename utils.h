@@ -27,6 +27,14 @@ int isValidEmailAddress(const char* input);
 
 int isDuplicate(const char* input, TreeNode* root);
 
-void editContact(TreeNode* root, const char* keyName, const char* name, const char* phoneNum, const char* email);
+void editContact(TreeNode** root, const char* keyName, const char* name, const char* phoneNum, const char* email);
+
+int countTreeNodes(TreeNode* root);
+
+void alternateSortHelper(TreeNode* root, TreeNode** arr, int* i);
+
+TreeNode** alternateSort(TreeNode* root, int mode);
+
+int compareValue(const TreeNode* a, const TreeNode* b, int mode);
 
 #endif

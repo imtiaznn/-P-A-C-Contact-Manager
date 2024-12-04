@@ -16,7 +16,6 @@ void freeContact(Contact* contact) {
     free(contact);
 }
 
-
 //Stores name, phoneNum and email into a Contact struct object
 Contact* createContact(int count, const char* name, const char* phoneNum, const char* email) {
    
@@ -114,16 +113,15 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
     } else {
         
         // Node to be deleted found
-        printf("Contact '%s' found. Deleting...\n", name);
+        printf("Contact '%s' found. Performing selected operation...\n", name);
 
-        // Case 1: Node has no left child
         if (root->leftPtr == NULL) {
             TreeNode* temp = root->rightPtr;
             freeContact(root->contact);
             free(root);
             return temp;
         }
-        // Case 2: Node has no right child
+
         else if (root->rightPtr == NULL) {
             TreeNode* temp = root->leftPtr;
             freeContact(root->contact);
@@ -131,7 +129,6 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
             return temp;
         }
 
-        // Case 3: Node has two children
         // Find the in-order successor (smallest in the right subtree)
         TreeNode* temp = root->rightPtr;
         while (temp->leftPtr != NULL) {
@@ -148,8 +145,8 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
     return root;
 }
 
-void editContact(TreeNode* root, const char* keyName, const char* name, const char* phoneNum, const char* email) {
-    TreeNode* oldNode = searchNode(root, keyName);
+void editContact(TreeNode** root, const char* keyName, const char* name, const char* phoneNum, const char* email) {
+    TreeNode* oldNode = searchNode(*root, keyName);
     if (oldNode == NULL) {
         printf("(editContact) Contact not found.\n");
         return;
@@ -157,10 +154,13 @@ void editContact(TreeNode* root, const char* keyName, const char* name, const ch
 
     TreeNode* newNode = createNode(createContact(oldNode->contact->index, name, phoneNum, email));
 
-    deleteContact(root, keyName);
+    *root = deleteContact(*root, keyName);
 
-    insertNode(root, newNode);
+    insertNode(*root, newNode);
+
+    printf("(editContact) Contact successfully updated.\n");
 }
+
 
 int isInteger(const char* input) {
     if (strlen(input) == 0) return 0;
@@ -297,4 +297,109 @@ int isDuplicate(const char* input, TreeNode* root) {
     }
 
     return 0;
+}
+
+int compareValue(const TreeNode* a, const TreeNode* b, int mode) {
+    if (a == NULL || b == NULL) return 0;
+
+    //Compares the values of either phoneNum or email
+    if (mode == 1) 
+        return strcmp(a->contact->phoneNum, b->contact->phoneNum);
+    else if (mode == 2) 
+        return strcmp(a->contact->email, b->contact->email);
+
+    return 0; // Default case, return 0 if mode is invalid
+}
+
+void merge(TreeNode** arr, int left, int mid, int right, int mode) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    TreeNode** L = malloc(n1 * sizeof(TreeNode*)); 
+    TreeNode** R = malloc(n2 * sizeof(TreeNode*)); 
+
+    //Copy data to temporary arrays
+    for (int i = 0; i < n1; i++)
+        L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++)
+        R[j] = arr[mid + 1 + j];
+
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (compareValue(L[i], R[j], mode) <= 0) {
+            arr[k] = L[i];
+            i++;
+        } else {
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+
+    //Copy the remaining elements of L[], if any
+    while (i < n1) {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+
+    //Copy the remaining elements of R[], if any
+    while (j < n2) {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+
+    free(L); 
+    free(R);
+}
+
+void mergesort(TreeNode** arr, int left, int right, int mode) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+
+        mergesort(arr, left, mid, mode);
+        mergesort(arr, mid + 1, right, mode);
+
+        merge(arr, left, mid, right, mode);
+    }
+}
+
+int countTreeNodes(TreeNode* root) {
+    if (root == NULL) return 0;
+    
+    //Returns the count of all nodes in the BST
+    return countTreeNodes(root->leftPtr) + countTreeNodes(root->rightPtr) + 1;
+}
+
+void alternateSortHelper(TreeNode* root, TreeNode** arr, int* i) {
+    if (root == NULL) return;
+
+    // Recursively visit the left subtree
+    alternateSortHelper(root->leftPtr, arr, i);
+
+    // Store the index of the contact in the array
+    arr[(*i)++] = root;
+
+    // Recursively visit the right subtree
+    alternateSortHelper(root->rightPtr, arr, i);
+}
+
+TreeNode** alternateSort(TreeNode* root, int mode) {
+    int count = countTreeNodes(root);
+    int i = 0;
+
+    TreeNode** arr = malloc(count * sizeof(TreeNode*));
+
+    if (arr == NULL) {
+        printf("(alternateSort) Failed to allocate memory");
+        return NULL;
+    }
+
+    alternateSortHelper(root, arr, &i);
+
+    // Sort the array in ascending order using mergesort
+    mergesort(arr, 0, count - 1, mode);
+
+    return arr;
 }

@@ -8,7 +8,7 @@
 //Saves a contact into the CSV file, does not save it into the BST however
 void saveContact(const char* name, const char* phoneNum, const char* email) {
     //Open the files contacts.csv to append contact
-    printf("%s\n", "-- Saving Contact... --");
+    printf("%s\n", "Saving Contact...");
 
     //Gets the file pointer
     FILE *fPtr = NULL;
@@ -148,7 +148,7 @@ void displayContactsHelper(TreeNode* root, int currentPage, const char query[100
 
     } else {
 
-        // Displays the all the contacts if there is no search query        
+        // Displays the all the contacts if there is no search query
         if (root->contact->index >= start && root->contact->index < end) {
             printf("%-2d - %-39s%-21s%s\n",
                 root->contact->index + 1,
@@ -165,18 +165,52 @@ void displayContactsHelper(TreeNode* root, int currentPage, const char query[100
 }
 
 //Display the contacts in the BST using inorder traversal
-void displayContacts(TreeNode* root, int currentPage, const char query[100], int* count) {
+void displayContacts(TreeNode* root, int currentPage, const char query[100], int* count, int mode) {
     if (root == NULL) {
         printf("No contacts found\n");
         return;
     }
 
+    //Reset flag and counter
     int matched = 0;
     *count = 0;
 
-    displayContactsHelper(root, currentPage, query, &matched, count);
+    //Handle alternate sorting if mode is enabled
+    if (mode > 0) {
 
-    //Prints the message if no contact is found
+        //set the count variable
+        *count = countTreeNodes(root);
+
+        int size = countTreeNodes(root);
+        TreeNode** arr = alternateSort(root, mode);
+
+        if (arr == NULL || size == 0) {
+            printf("(displayContacts) Failed to sort contacts\n");
+            return;
+        }
+
+        //Calculate range for pagination
+        int start = currentPage * CONTACT_PER_PAGE;
+        int end = start + CONTACT_PER_PAGE;
+
+        //Prints out the sorted contacts
+        for (int i = start; i < end && i < size; i++) {
+            printf("%-2d - %-39s%-21s%s\n",
+                   i + 1,
+                   arr[i]->contact->name,
+                   arr[i]->contact->phoneNum,
+                   arr[i]->contact->email);
+        }
+
+        //Free the sorted array
+        free(arr);
+
+    } else {
+        //Use in-order traversal if no sorting is required
+        displayContactsHelper(root, currentPage, query, &matched, count);
+    }
+
+    //Print a message if no contacts were found
     if (matched == 0 && strlen(query) != 0) {
         printf("\nNo contacts found matching %s...\n", query);
     }
@@ -185,6 +219,7 @@ void displayContacts(TreeNode* root, int currentPage, const char query[100], int
         printf("\nThere are %d contacts found", *count);
     }
 }
+
 
 // Function to update indices of all contacts in a single traversal
 int refreshIndex(TreeNode* root, int currentIndex) {
@@ -209,11 +244,12 @@ int getOption(int currentOption, char input[10]) {
 
     //Prints the menu display
     printf("%s\n", "------ Available Operations -----");
-    printf("\033[36m%-9s\t%-9s\n%-9s\t%-9s\033[0m\n\n%-9s\n", "1.Save", "2.Edit", "3.Delete", "4.Search", "\033[33mPress '0' to Exit\033[0m");
+    printf("\033[36m%-9s\t%-9s\n%-9s\t%-9s\n\n%-9s\033[0m\n\n%-9s\n", "1.Save", "2.Edit", "3.Delete", "4.Search", "7.Sort by Choice", "\033[33mPress '0' to Exit\033[0m");
     printf("%s\n? ", "---------------------------------");
 
     //Gets the input from the user using input as buffer
     fgets(input, 10, stdin);
+    
     if (!isInteger(input)) {
         printf("(getInput) Invalid input, please enter an integer\n");
         return -1;
