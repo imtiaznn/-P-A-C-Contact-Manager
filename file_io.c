@@ -121,48 +121,46 @@ void displayContactsHelper(TreeNode* root, int currentPage, const char query[100
     int start = currentPage * CONTACT_PER_PAGE;
     int end = start + CONTACT_PER_PAGE;
 
-    //Makes a duplicate of the email to remove the newline character on display
+    // Make a duplicate of the email to remove the newline character on display
     char email[strlen(root->contact->email) + 1];
     strcpy(email, root->contact->email);
     email[strcspn(email, "\n")] = '\0';
 
-    // Checks if any query searches are being made beforehand
+    // Perform partial matching if a query is provided
     if (strlen(query) != 0) {
+        // Check if the query is a substring of the name, phone number, or email
+        if (strstr(root->contact->name, query) != NULL ||
+            strstr(root->contact->phoneNum, query) != NULL ||
+            strstr(email, query) != NULL) {
+            
+            *matched = 1; // Mark that at least one match was found
 
-        if (strcmp(root->contact->name, query) != 0) {
-            //Skip the current contact if it does not match the query
-        } else {
-            *matched = 1;
-
-            // Indicates that a contact matches the query and will be printed
-            if (*matched) {
-                printf("%d - %-39s%-21s%s\n",
-                root->contact->index + 1,
-                root->contact->name,
-                root->contact->phoneNum,
-                email);
-
-                (*count)++;
+            // Print if the contact falls within the range for the current page
+            if (*count >= start && *count < end) {
+                printf("%-2d - %-39s%-21s%s\n",
+                       root->contact->index + 1,
+                       root->contact->name,
+                       root->contact->phoneNum,
+                       email);
             }
+            (*count)++;
         }
-
     } else {
-
-        // Displays the all the contacts if there is no search query
-        if (root->contact->index >= start && root->contact->index < end) {
+        // Display all contacts if no query is provided
+        if (*count >= start && *count < end) {
             printf("%-2d - %-39s%-21s%s\n",
-                root->contact->index + 1,
-                root->contact->name,
-                root->contact->phoneNum,
-                email);
+                   root->contact->index + 1,
+                   root->contact->name,
+                   root->contact->phoneNum,
+                   email);
         }
-
         (*count)++;
     }
 
     // Recursively visit the right subtree
-    displayContactsHelper(root->rightPtr, currentPage, query, matched, count);  
+    displayContactsHelper(root->rightPtr, currentPage, query, matched, count);
 }
+
 
 //Display the contacts in the BST using inorder traversal
 void displayContacts(TreeNode* root, int currentPage, const char query[100], int* count, int mode) {
@@ -171,16 +169,13 @@ void displayContacts(TreeNode* root, int currentPage, const char query[100], int
         return;
     }
 
-    //Reset flag and counter
+    // Reset flag and counter
     int matched = 0;
     *count = 0;
 
-    //Handle alternate sorting if mode is enabled
     if (mode > 0) {
-
-        //set the count variable
+        // Alternate sorting logic
         *count = countTreeNodes(root);
-
         int size = countTreeNodes(root);
         TreeNode** arr = alternateSort(root, mode);
 
@@ -189,37 +184,36 @@ void displayContacts(TreeNode* root, int currentPage, const char query[100], int
             return;
         }
 
-        //Calculate range for pagination
         int start = currentPage * CONTACT_PER_PAGE;
         int end = start + CONTACT_PER_PAGE;
 
-        //Prints out the sorted contacts
         for (int i = start; i < end && i < size; i++) {
-            printf("%-2d - %-39s%-21s%s\n",
-                   i + 1,
-                   arr[i]->contact->name,
-                   arr[i]->contact->phoneNum,
-                   arr[i]->contact->email);
+            if (strlen(query) == 0 || strstr(arr[i]->contact->name, query) != NULL ||
+                strstr(arr[i]->contact->phoneNum, query) != NULL ||
+                strstr(arr[i]->contact->email, query) != NULL) {
+                printf("%-2d - %-39s%-21s%s\n",
+                       i + 1,
+                       arr[i]->contact->name,
+                       arr[i]->contact->phoneNum,
+                       arr[i]->contact->email);
+                matched++;
+            }
         }
-
-        //Free the sorted array
         free(arr);
-
     } else {
-        //Use in-order traversal if no sorting is required
+        // Use in-order traversal
         displayContactsHelper(root, currentPage, query, &matched, count);
     }
 
-    //Print a message if no contacts were found
+    // Print a message if no contacts were found
     if (matched == 0 && strlen(query) != 0) {
-        printf("\nNo contacts found matching %s...\n", query);
+        printf("\nNo contacts found matching '%s'...\n", query);
     }
 
     if (*count != 0) {
-        printf("\nThere are %d contacts found", *count);
+        printf("\nThere are %d contacts found.\n", *count);
     }
 }
-
 
 // Function to update indices of all contacts in a single traversal
 int refreshIndex(TreeNode* root, int currentIndex) {
