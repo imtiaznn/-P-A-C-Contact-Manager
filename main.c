@@ -86,6 +86,9 @@ int main()
     // Handles queries and searches
     char query[QUERY_SIZE] = "";
 
+    // Decyption
+    decryptFile("contacts.csv");
+
     // Load in data value from CSV into BST
     if (loadCSV(&root, &count) == -1)
     {
@@ -100,7 +103,7 @@ int main()
         printf("%-43s%-21s%-21s\n", "NAME", "PHONE NUMBER", "EMAIL");
         printf("%s\n", "----------------------------------------------------------------------------");
 
-        //Display the contact list
+        // Display the contact list
         displayContacts(root, currentPage, query, &count, mode);
 
         // Sets the maximum number of pages
@@ -108,19 +111,24 @@ int main()
 
         printf("\nPAGE (%d/%d)\n\n", currentPage + 1, maxPage + 1);
 
-        if(currentPage > 0) {
+        if (currentPage > 0)
+        {
             printf("\033[1;34m%-61s\033[0m", "<< (5) Previous Page");
         }
 
-        if(currentPage < maxPage) {
+        if (currentPage < maxPage)
+        {
             printf("\033[1;34m%-s\033[0m", "(6) Next Page >>");
         }
 
-        //Prints message to the user
-        if(msgFlag >= 0 && msgFlag < 10) {
+        // Prints message to the user
+        if (msgFlag >= 0 && msgFlag < 10)
+        {
             printf("\n\033[1;31m%s\033[0m", getMsg[msgFlag]);
             msgFlag = -1;
-        } else if (msgFlag >= 10 && msgFlag < 20) {
+        }
+        else if (msgFlag >= 10 && msgFlag < 20)
+        {
             printf("\n\033[1;32m%s\033[0m", getMsg[msgFlag]);
             msgFlag = -1;
         }
@@ -327,9 +335,9 @@ int main()
 
         case OPTION_SEARCH:
 
-                getInput(query, "Enter search query (Enter a blank line to reset query):\n? ");
+            getInput(query, "Enter search query (Enter a blank line to reset query):\n? ");
 
-                currentPage = 0;
+            currentPage = 0;
 
             if (strlen(query) == 0)
             {
@@ -341,33 +349,40 @@ int main()
 
         case OPTION_PREV:
 
-                if(currentPage > 0) {
-                    //Decrements the current page
-                    currentPage--;
-                } else {
-                    msgFlag = ERROR_INVALID_OPTION;
-                }
+            if (currentPage > 0)
+            {
+                // Decrements the current page
+                currentPage--;
+            }
+            else
+            {
+                msgFlag = ERROR_INVALID_OPTION;
+            }
 
             break;
         case OPTION_NEXT:
 
-                if (currentPage < maxPage) {
-                    //Increments the current page
-                    currentPage++;
-                } else {
-                    msgFlag = ERROR_INVALID_OPTION;
-                }
-                break;
+            if (currentPage < maxPage)
+            {
+                // Increments the current page
+                currentPage++;
+            }
+            else
+            {
+                msgFlag = ERROR_INVALID_OPTION;
+            }
+            break;
 
         case OPTION_TOGGLESORT:
 
-                getInput(buffer, "Enter the index of the selected option (Press 1, 2 or 3):\n1. Sort by Name\n2. Sort by Phone Number\n3. Sort by Email\n? ");
+            getInput(buffer, "Enter the index of the selected option (Press 1, 2 or 3):\n1. Sort by Name\n2. Sort by Phone Number\n3. Sort by Email\n? ");
 
-                currentPage = 0;
+            currentPage = 0;
 
-                if( !isInteger(buffer) || atoi(buffer) < 1 || atoi(buffer) > 3) {
-                    msgFlag = ERROR_INVALID_OPTION;
-                }
+            if (!isInteger(buffer) || atoi(buffer) < 1 || atoi(buffer) > 3)
+            {
+                msgFlag = ERROR_INVALID_OPTION;
+            }
 
             mode = atoi(buffer);
 
@@ -391,6 +406,9 @@ int main()
     {
         msgFlag = ERROR_UPDATE;
     }
+
+    // Encrypts the file
+    encryptFile("contacts.csv");
 
     free(buffer);
     // Make function to free entire tree
