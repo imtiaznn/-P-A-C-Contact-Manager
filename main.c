@@ -39,6 +39,9 @@ const char* getErrorMsg[] = {
 };
 
 int main() {
+    //Decrypt the CSV file
+    //Will skip if no data is stored in the CSV file
+    process_csv("contacts.csv", 0);
 
     //Variables root to represent the binary search tree
     TreeNode* root = NULL;
@@ -316,6 +319,8 @@ int main() {
     if (updateCSV(root) == -1) {
         printf(getErrorMsg[2]);
     }
+
+    process_csv("contacts.csv", 1);
 
     free(buffer);
     //Make function to free entire tree
