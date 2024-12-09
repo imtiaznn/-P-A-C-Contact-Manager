@@ -36,7 +36,8 @@ typedef enum
     ERROR_NOT_FOUND,
     SUCCESS_SAVE,
     SUCCESS_DELETE,
-    SUCCESS_EDIT
+    SUCCESS_EDIT,
+    SUCCESS_NEW_FILE
 } Message;
 
 const char *getMsg[] = {
@@ -53,6 +54,7 @@ const char *getMsg[] = {
     "(Success) Contact saved successfully",
     "(Success) Contact deleted successfully",
     "(Success) Contact edited successfully",
+    "(Success) A new contact file has been created"
 };
 
 int main()
@@ -86,7 +88,7 @@ int main()
     // Handles queries and searches
     char query[QUERY_SIZE] = "";
 
-    // Decyption
+    //Decrypts the file if it exists
     if(fopen("contacts.csv", "r") != NULL) {
         decryptFile("contacts.csv");
     }
@@ -94,7 +96,7 @@ int main()
     // Load in data value from CSV into BST
     if (loadCSV(&root, &count) == -1)
     {
-        msgFlag = ERROR_LOAD;
+        msgFlag = SUCCESS_NEW_FILE;
     }
 
     while (1)
