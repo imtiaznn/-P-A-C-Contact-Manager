@@ -22,33 +22,49 @@ typedef enum  {
 } Option;
 
 typedef enum {
-    ERROR_ALLOCATION_FAILED
-} Error;
+    ERROR_ALLOCATION_FAILED,
+    ERROR_LOAD,
+    ERROR_UPDATE,
+    ERROR_REFRESH,
+    ERROR_EMPTY_SEARCH,
+    ERROR_INVALID_OPTION,
+    ERROR_DUPLICATE,
+    ERROR_INVALID_PHONE,
+    ERROR_INVALID_EMAIL,
+    ERROR_NOT_FOUND,
+    SUCCESS_SAVE,
+    SUCCESS_DELETE,
+    SUCCESS_EDIT
+} Message;
 
-const char* getErrorMsg[] = {
-    "\033[1;31m(main) Could not allocate memory\033[0m",
-    "\033[1;31m(main) There are currently no contacts to be loaded\033[0m",
-    "\033[1;31m(main) Could not update data into CSV\033[0m",
-    "\033[1;31m(main) Could not refresh index\033[0m",
-    "\033[1;31m(Error) Empty searches are not allowed\033[0m",
-    "\033[1;31m(Error) Invalid option. Please try again\033[0m",
-    "\033[1;31m(Error) Duplicate values are not allowed\033[0m",
-    "\033[1;31m(Error) Invalid phone number, please try again\033[0m",
-    "\033[1;31m(Error) Invalid email address, please try again\033[0m",
-    "\033[1;31m(Error) Unable to find contact\033[0m"
+const char* getMsg[] = {
+    "(main) Could not allocate memory",
+    "(main) There are currently no contacts to be loaded",
+    "(main) Could not update data into CSV",
+    "(main) Could not refresh index",
+    "(Error) Empty searches are not allowed",
+    "(Error) Invalid option. Please try again",
+    "(Error) Duplicate values are not allowed",
+    "(Error) Invalid phone number, please try again",
+    "(Error) Invalid email address, please try again",
+    "(Error) Unable to find contact",
+    "(Success) Contact saved successfully",
+    "(Success) Contact deleted successfully",
+    "(Success) Contact edited successfully",
 };
 
 int main() {
 
     //Variables root to represent the binary search tree
     TreeNode* root = NULL;
+    int msgFlag = -1;
 
     //Buffers for receiving integer input option and string input options
     char input[10];
     char *buffer = malloc(BUFFER_SIZE);
-    if (buffer == NULL){
+    if (buffer == NULL) {
         free(buffer);
-        printf("%s\n",getErrorMsg[0]);
+        msgFlag = ERROR_ALLOCATION_FAILED;
         exit(1);
     }
 
@@ -68,7 +84,7 @@ int main() {
 
     //Load in data value from CSV into BST
     if(loadCSV(&root, &count) == -1) {
-        printf("%s\n", getErrorMsg[1]);
+        msgFlag = ERROR_LOAD;
     }
 
 
@@ -93,6 +109,15 @@ int main() {
         printf("\nPAGE (%d/%d)\n", currentPage + 1, maxPage + 1);
         printf("\n%-61s%s\n\n", "\033[1;34m<< (5) Previous Page\033[0m", "\033[1;34m(6) Next Page >>\033[0m");
 
+        //Prints message to the user
+        if(msgFlag >= 0 && msgFlag < 10) {
+            printf("\033[1;31m%s\033[0m\n\n", getMsg[msgFlag]);
+            msgFlag = -1;
+        } else if (msgFlag >= 10 && msgFlag < 20) {
+            printf("\033[1;32m%s\033[0m\n\n", getMsg[msgFlag]);
+            msgFlag = -1;
+        }
+
         //Get input after each iteration
         currentOption = getOption(currentOption,input);
 
@@ -110,7 +135,7 @@ int main() {
 
                 //Checks if malloc() is successfull to prevent crashes
                 if (name == NULL || phoneNum == NULL || email == NULL) {
-                    printf(getErrorMsg[0]);
+                    msgFlag = ERROR_ALLOCATION_FAILED;
 
                     free(name);
                     free(phoneNum);
@@ -121,14 +146,14 @@ int main() {
                 //Receives input from the user, removing any newline characters
                 getInput(name, "(1/3) Enter the name of the contact to be saved\n? ");
                 if(isDuplicate(name, root)) {
-                    printf("%s\n", getErrorMsg[6]);
+                    msgFlag = ERROR_DUPLICATE;
                     free(name);
                     break;
                 }
 
                 getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved\n? ");
                 if(!isValidPhoneNumber(phoneNum)) {
-                    printf("%s\n", getErrorMsg[7]);
+                    msgFlag = ERROR_INVALID_PHONE;
                     free(name);
                     free(phoneNum);
                     break;
@@ -136,7 +161,7 @@ int main() {
 
                 getInput(email, "(3/3) Enter the email of the contact to be saved\n? ");
                 if(!isValidEmailAddress(email)) {
-                    printf("%s\n", getErrorMsg[8]);
+                    msgFlag = ERROR_INVALID_EMAIL;
                     free(name);
                     free(phoneNum);
                     free(email);
@@ -145,6 +170,7 @@ int main() {
 
                 //Saves the contact to CSV
                 saveContact(name, phoneNum, email);
+                msgFlag = SUCCESS_SAVE;
 
                 //Sets the refresh flag
                 needRefreshIndex = 1;
@@ -170,7 +196,7 @@ int main() {
                 //Gets the node that needs to be edited
                 TreeNode* editedNode = searchNode(root, buffer);
                 if (editedNode == NULL) {
-                    printf("%s\n", getErrorMsg[9]);
+                    msgFlag = ERROR_NOT_FOUND;
                     break;
                 }
 
@@ -194,13 +220,13 @@ int main() {
                 // Validate the input and set the new value
                 int isValid = 1;
                 if (currentChoice == 1 && isDuplicate(buffer, root)) {
-                    printf("%s\n", getErrorMsg[6]);
+                    msgFlag = ERROR_DUPLICATE;
                     isValid = 0;
                 } else if (currentChoice == 2 && !isValidPhoneNumber(buffer)) {
-                    printf("%s\n", getErrorMsg[7]);
+                    msgFlag = ERROR_INVALID_PHONE;
                     isValid = 0;
                 } else if (currentChoice == 3 && !isValidEmailAddress(buffer)) {
-                    printf("%s\n", getErrorMsg[8]); 
+                    msgFlag = ERROR_INVALID_EMAIL;
                     isValid = 0;
                 }
 
@@ -220,7 +246,7 @@ int main() {
                     else if (currentChoice == 2) editContact(&root, editedNode->contact->name, editedNode->contact->name, buffer, editedNode->contact->email);
                     else if (currentChoice == 3) editContact(&root, editedNode->contact->name, editedNode->contact->name, editedNode->contact->phoneNum, buffer);
 
-                    printf("Contact updated successfully.\n");
+                    msgFlag = SUCCESS_EDIT;
                     needRefreshIndex = 1; // Flag for reloading index or CSV
                 } else {
                     printf("Edit operation canceled.\n");
@@ -237,7 +263,7 @@ int main() {
 
                 TreeNode* deletedNode = searchNode(root, buffer);
                 if (deletedNode == NULL) {
-                    printf("%s\n", getErrorMsg[9]);
+                    msgFlag = 9;
                     break;
                 }   
 
@@ -250,12 +276,13 @@ int main() {
                 } else if (strcasecmp(buffer, "N") == 0) {
                     currentChoice = 0;
                 } else {
-                    //error
+                    msgFlag = ERROR_INVALID_OPTION;
                 }
 
                 if(currentChoice) {
                     //Deletes the contact that the user has selected
                     root = deleteContact(root, deletedNode->contact->name);
+                    msgFlag = SUCCESS_DELETE;
                 }
 
                 needRefreshIndex = 1;
@@ -267,7 +294,7 @@ int main() {
                 getInput(query, "Enter search query (Enter a blank line to reset query):\n? ");
 
                 if(strlen(query) == 0) {
-                    printf("%s\n", getErrorMsg[4]);
+                    msgFlag = 4;
                     break;
                 }
 
@@ -278,26 +305,23 @@ int main() {
                 if(currentPage > 0) {
                     //Decrements the current page
                     currentPage--;
-                } else {
-                    printf("You are already on the first page\n");
                 }
+
                 break;
             case OPTION_NEXT:
 
                 if (currentPage < maxPage) {
                     //Increments the current page
                     currentPage++;
-                } else {
-                    printf("You are already on the last page\n");
                 }
                 break;
 
             case OPTION_TOGGLESORT:
 
-                getInput(buffer, "Enter the index of the selected option (Press 0 or 1):\n0. Sort by Name\n1. Sort by Phone Number\n2. Sort by Email\n? ");
+                getInput(buffer, "Enter the index of the selected option (Press 0, 1 or 2):\n0. Sort by Name\n1. Sort by Phone Number\n2. Sort by Email\n? ");
 
-                if( !isInteger(buffer) ) {
-                    printf("%s\n", getErrorMsg[5]);
+                if( !isInteger(buffer) || atoi(buffer) < 0 || atoi(buffer) > 2) {
+                    msgFlag = ERROR_INVALID_OPTION;
                 }
 
                 mode = atoi(buffer);
@@ -305,7 +329,7 @@ int main() {
                 break;
 
             default:
-                printf("%s\n", getErrorMsg[5]);
+                msgFlag = ERROR_INVALID_OPTION;
                 break;
         }
 
@@ -319,7 +343,7 @@ int main() {
 
     //Updates the CSV everytime the program is closed
     if (updateCSV(root) == -1) {
-        printf(getErrorMsg[2]);
+        msgFlag = 2;
     }
 
     free(buffer);
