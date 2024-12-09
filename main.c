@@ -113,6 +113,7 @@ int main()
         maxPage = (int)ceil((double)count / CONTACT_PER_PAGE) - 1;
 
         printf("\nPAGE (%d/%d)\n\n", currentPage + 1, maxPage + 1);
+
         if (currentPage > 0)
         {
             printf("%-61s", "\033[1;34m<< (5) Previous Page\033[0m");
@@ -174,7 +175,7 @@ int main()
                 break;
             }
 
-            getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved\n? ");
+            getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved (Must include \"+60\")\n? ");
             if (!isValidPhoneNumber(phoneNum))
             {
                 msgFlag = ERROR_INVALID_PHONE;
