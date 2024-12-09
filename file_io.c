@@ -169,7 +169,7 @@ void displayContactsHelper(TreeNode *root, int currentPage, const char query[100
         // Display all contacts if no query is provided
         if (*count >= start && *count < end)
         {
-            printf("%-2d - %-39s%-21s%s\n",
+            printf("%-3d- %-40s%-21s%s\n",
                    root->contact->index + 1,
                    root->contact->name,
                    root->contact->phoneNum,
@@ -272,7 +272,7 @@ int getOption(int currentOption, char input[10])
 {
 
     // Prints the menu display
-    printf("\n\n%s\n", "------ Available Operations -----");
+    printf("\n%s\n", "------ Available Operations -----");
     printf("\033[36m%-9s\t%-9s\n%-9s\t%-9s\n\n%-9s\033[0m\n\n%-9s\n", "1.Save", "2.Edit", "3.Delete", "4.Search", "7.Sort by Choice", "\033[33mPress '0' to Exit\033[0m");
     printf("%s\n? ", "---------------------------------");
 

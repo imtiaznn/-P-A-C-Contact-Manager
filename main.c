@@ -99,9 +99,9 @@ int main()
     {
 
         // Prints the application's header
-        printf("%s\n", "----------------------------- Contact List ---------------------------------");
-        printf("%-43s%-21s%-21s\n", "NAME", "PHONE NUMBER", "EMAIL");
-        printf("%s\n", "----------------------------------------------------------------------------");
+        printf("%s\n", "-------------------------------------- Contact List ------------------------------------------");
+        printf("%-5s%-40s%-21s%-21s\n", "ID", "NAME", "PHONE NUMBER", "EMAIL");
+        printf("%s\n", "----------------------------------------------------------------------------------------------");
 
         // Display the contact list
         displayContacts(root, currentPage, query, &count, mode);
@@ -109,7 +109,15 @@ int main()
         // Sets the maximum number of pages
         maxPage = (int)ceil((double)count / CONTACT_PER_PAGE) - 1;
 
-        printf("\nPAGE (%d/%d)\n\n", currentPage + 1, maxPage + 1);
+        // Prints the current page
+        if (maxPage == -1)
+        {
+            printf("\nPAGE (1/1)\n");
+        }
+        else
+        {
+            printf("\nPAGE (%d/%d)\n", currentPage + 1, maxPage + 1);
+        }
 
         if (currentPage > 0)
         {
