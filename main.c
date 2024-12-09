@@ -100,7 +100,7 @@ int main()
         printf("%-43s%-21s%-21s\n", "NAME", "PHONE NUMBER", "EMAIL");
         printf("%s\n", "----------------------------------------------------------------------------");
 
-        //Display the contact list
+        // Display the contact list
         displayContacts(root, currentPage, query, &count, mode);
 
         // Sets the maximum number of pages
@@ -108,19 +108,24 @@ int main()
 
         printf("\nPAGE (%d/%d)\n\n", currentPage + 1, maxPage + 1);
 
-        if(currentPage > 0) {
+        if (currentPage > 0)
+        {
             printf("\033[1;34m%-61s\033[0m", "<< (5) Previous Page");
         }
 
-        if(currentPage < maxPage) {
+        if (currentPage < maxPage)
+        {
             printf("\033[1;34m%-s\033[0m", "(6) Next Page >>");
         }
 
-        //Prints message to the user
-        if(msgFlag >= 0 && msgFlag < 10) {
+        // Prints message to the user
+        if (msgFlag >= 0 && msgFlag < 10)
+        {
             printf("\n\033[1;31m%s\033[0m", getMsg[msgFlag]);
             msgFlag = -1;
-        } else if (msgFlag >= 10 && msgFlag < 20) {
+        }
+        else if (msgFlag >= 10 && msgFlag < 20)
+        {
             printf("\n\033[1;32m%s\033[0m", getMsg[msgFlag]);
             msgFlag = -1;
         }
@@ -130,7 +135,39 @@ int main()
 
         // terminates the loop when '0' is entered
         if (currentOption == OPTION_EXIT)
+        {
+            // Encrypt the CSV file before exiting
+            FILE *fPtr = fopen("contacts.csv", "r");
+            if (fPtr == NULL)
+            {
+                msgFlag = ERROR_LOAD;
+                break;
+            }
+
+            fseek(fPtr, 0, SEEK_END);
+            long fsize = ftell(fPtr);
+            fseek(fPtr, 0, SEEK_SET);
+
+            unsigned char *plaintext = malloc(fsize + 1);
+            fread(plaintext, 1, fsize, fPtr);
+            fclose(fPtr);
+            plaintext[fsize] = '\0';
+
+            unsigned char *key = (unsigned char *)"01234567890123456789012345678901"; // 32 bytes key
+            unsigned char *iv = (unsigned char *)"0123456789012345";                  // 16 bytes IV
+
+            unsigned char *ciphertext = malloc(fsize + 1);
+            int ciphertext_len = encrypt(plaintext, fsize, key, iv, ciphertext);
+
+            fPtr = fopen("contacts.csv", "w");
+            fwrite(ciphertext, 1, ciphertext_len, fPtr);
+            fclose(fPtr);
+
+            free(plaintext);
+            free(ciphertext);
+
             break;
+        }
 
         // Program control
         switch (currentOption)
@@ -327,9 +364,9 @@ int main()
 
         case OPTION_SEARCH:
 
-                getInput(query, "Enter search query (Enter a blank line to reset query):\n? ");
+            getInput(query, "Enter search query (Enter a blank line to reset query):\n? ");
 
-                currentPage = 0;
+            currentPage = 0;
 
             if (strlen(query) == 0)
             {
@@ -341,33 +378,40 @@ int main()
 
         case OPTION_PREV:
 
-                if(currentPage > 0) {
-                    //Decrements the current page
-                    currentPage--;
-                } else {
-                    msgFlag = ERROR_INVALID_OPTION;
-                }
+            if (currentPage > 0)
+            {
+                // Decrements the current page
+                currentPage--;
+            }
+            else
+            {
+                msgFlag = ERROR_INVALID_OPTION;
+            }
 
             break;
         case OPTION_NEXT:
 
-                if (currentPage < maxPage) {
-                    //Increments the current page
-                    currentPage++;
-                } else {
-                    msgFlag = ERROR_INVALID_OPTION;
-                }
-                break;
+            if (currentPage < maxPage)
+            {
+                // Increments the current page
+                currentPage++;
+            }
+            else
+            {
+                msgFlag = ERROR_INVALID_OPTION;
+            }
+            break;
 
         case OPTION_TOGGLESORT:
 
-                getInput(buffer, "Enter the index of the selected option (Press 1, 2 or 3):\n1. Sort by Name\n2. Sort by Phone Number\n3. Sort by Email\n? ");
+            getInput(buffer, "Enter the index of the selected option (Press 1, 2 or 3):\n1. Sort by Name\n2. Sort by Phone Number\n3. Sort by Email\n? ");
 
-                currentPage = 0;
+            currentPage = 0;
 
-                if( !isInteger(buffer) || atoi(buffer) < 1 || atoi(buffer) > 3) {
-                    msgFlag = ERROR_INVALID_OPTION;
-                }
+            if (!isInteger(buffer) || atoi(buffer) < 1 || atoi(buffer) > 3)
+            {
+                msgFlag = ERROR_INVALID_OPTION;
+            }
 
             mode = atoi(buffer);
 

@@ -2,34 +2,99 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <openssl/evp.h>
+#include <openssl/aes.h>
 #include "structs.h"
 
-void freeContact(Contact* contact) {
-    if (contact == NULL) return;
+void handleErrors(void)
+{
+    ERR_print_errors_fp(stderr);
+    abort();
+}
 
-    //Free any dynamically allocated memory inside the Contact structure
+int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
+            unsigned char *iv, unsigned char *ciphertext)
+{
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int ciphertext_len;
+
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+        handleErrors();
+
+    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+        handleErrors();
+
+    if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
+        handleErrors();
+    ciphertext_len = len;
+
+    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
+        handleErrors();
+    ciphertext_len += len;
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    return ciphertext_len;
+}
+
+int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
+            unsigned char *iv, unsigned char *plaintext)
+{
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int plaintext_len;
+
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+        handleErrors();
+
+    if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+        handleErrors();
+
+    if (1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len))
+        handleErrors();
+    plaintext_len = len;
+
+    if (1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len))
+        handleErrors();
+    plaintext_len += len;
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    return plaintext_len;
+}
+
+void freeContact(Contact *contact)
+{
+    if (contact == NULL)
+        return;
+
+    // Free any dynamically allocated memory inside the Contact structure
     free(contact->name);
     free(contact->phoneNum);
     free(contact->email);
 
-    //Free the Contact structure itself
+    // Free the Contact structure itself
     free(contact);
 }
 
-//Stores name, phoneNum and email into a Contact struct object
-Contact* createContact(int count, const char* name, const char* phoneNum, const char* email) {
-   
-    Contact* c = malloc(sizeof(Contact));
-    if (c == NULL) return NULL;
+// Stores name, phoneNum and email into a Contact struct object
+Contact *createContact(int count, const char *name, const char *phoneNum, const char *email)
+{
 
-    //Allocates memory for each filed in the contact struct
+    Contact *c = malloc(sizeof(Contact));
+    if (c == NULL)
+        return NULL;
+
+    // Allocates memory for each filed in the contact struct
     c->index = count;
     c->name = malloc(strlen(name) + 1);
     c->phoneNum = malloc(strlen(phoneNum) + 1);
     c->email = malloc(strlen(email) + 1);
 
-    //Checks if malloc is succesfull
-    if (c->name == NULL || c->phoneNum == NULL || c->email == NULL) {
+    // Checks if malloc is succesfull
+    if (c->name == NULL || c->phoneNum == NULL || c->email == NULL)
+    {
         free(c->name);
         free(c->phoneNum);
         free(c->email);
@@ -37,7 +102,7 @@ Contact* createContact(int count, const char* name, const char* phoneNum, const 
         return NULL;
     }
 
-    //Copy the strings into each fields
+    // Copy the strings into each fields
     strcpy(c->name, name);
     strcpy(c->phoneNum, phoneNum);
     strcpy(c->email, email);
@@ -45,93 +110,109 @@ Contact* createContact(int count, const char* name, const char* phoneNum, const 
     return c;
 }
 
-//Creates a node on a binary tree with contact as stored data
-TreeNode* createNode(Contact *c) {
+// Creates a node on a binary tree with contact as stored data
+TreeNode *createNode(Contact *c)
+{
 
-    TreeNode* newNode = (TreeNode*) malloc(sizeof(TreeNode));
-    if (newNode == NULL) return NULL;
+    TreeNode *newNode = (TreeNode *)malloc(sizeof(TreeNode));
+    if (newNode == NULL)
+        return NULL;
 
-    //Stores the contact and sets the value of the left and right pointers to NULL
+    // Stores the contact and sets the value of the left and right pointers to NULL
     newNode->contact = c;
     newNode->leftPtr = newNode->rightPtr = NULL;
 
     return newNode;
 }
 
-//Inserts a node at its appropiate position based on the name
-TreeNode* insertNode(TreeNode* root, TreeNode* newNode) {
+// Inserts a node at its appropiate position based on the name
+TreeNode *insertNode(TreeNode *root, TreeNode *newNode)
+{
 
-    //If root is NULL, then the newNode will be inserted at the current position
-    //This is as NULL implies a children of a leaf node
-    if (root == NULL) return newNode;
+    // If root is NULL, then the newNode will be inserted at the current position
+    // This is as NULL implies a children of a leaf node
+    if (root == NULL)
+        return newNode;
 
-    //Compares the name to determine whether the contact will inserted to the left or right node
-    if (strcmp(root->contact->name, newNode->contact->name) > 0) {
+    // Compares the name to determine whether the contact will inserted to the left or right node
+    if (strcmp(root->contact->name, newNode->contact->name) > 0)
+    {
 
         root->leftPtr = insertNode(root->leftPtr, newNode);
-    
-    } else if (strcmp(root->contact->name, newNode->contact->name) < 0) {
-    
+    }
+    else if (strcmp(root->contact->name, newNode->contact->name) < 0)
+    {
+
         root->rightPtr = insertNode(root->rightPtr, newNode);
-    
     }
 
     return root;
 }
 
-//Searches for a node based on name starting with the root
-TreeNode* searchNode(TreeNode* root, const char* name) {
+// Searches for a node based on name starting with the root
+TreeNode *searchNode(TreeNode *root, const char *name)
+{
 
-    //Returns the root if theres no tree or if node is found
-    if (root == NULL || strcmp(root->contact->name, name) == 0) return root;
-    
+    // Returns the root if theres no tree or if node is found
+    if (root == NULL || strcmp(root->contact->name, name) == 0)
+        return root;
 
-    //Continues searching towards node to the left or right of the root
-    if (strcmp(root->contact->name, name) > 0) {
+    // Continues searching towards node to the left or right of the root
+    if (strcmp(root->contact->name, name) > 0)
+    {
         return searchNode(root->leftPtr, name);
-    } else {
+    }
+    else
+    {
         return searchNode(root->rightPtr, name);
     }
-    
 }
 
-TreeNode* deleteContact(TreeNode* root, const char* name) {
-    if (root == NULL) {
+TreeNode *deleteContact(TreeNode *root, const char *name)
+{
+    if (root == NULL)
+    {
         printf("Reached a NULL node; contact not found.\n");
         return NULL;
     }
 
     // Compare the name with the current node's contact name
-    if (strcmp(name, root->contact->name) < 0) {
+    if (strcmp(name, root->contact->name) < 0)
+    {
 
         root->leftPtr = deleteContact(root->leftPtr, name);
-    
-    } else if (strcmp(name, root->contact->name) > 0) {
-    
+    }
+    else if (strcmp(name, root->contact->name) > 0)
+    {
+
         root->rightPtr = deleteContact(root->rightPtr, name);
-    
-    } else {
-        
+    }
+    else
+    {
+
         // Node to be deleted found
         printf("Contact '%s' found. Performing selected operation...\n", name);
 
-        if (root->leftPtr == NULL) {
-            TreeNode* temp = root->rightPtr;
+        if (root->leftPtr == NULL)
+        {
+            TreeNode *temp = root->rightPtr;
             freeContact(root->contact);
             free(root);
             return temp;
         }
 
-        else if (root->rightPtr == NULL) {
-            TreeNode* temp = root->leftPtr;
+        else if (root->rightPtr == NULL)
+        {
+            TreeNode *temp = root->leftPtr;
             freeContact(root->contact);
             free(root);
             return temp;
         }
 
         // Find the in-order successor (smallest in the right subtree)
-        TreeNode* temp = root->rightPtr;
-        while (temp->leftPtr != NULL) {
+        TreeNode *temp = root->rightPtr;
+        while (temp->leftPtr != NULL)
+        {
             temp = temp->leftPtr;
         }
 
@@ -145,14 +226,16 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
     return root;
 }
 
-void editContact(TreeNode** root, const char* keyName, const char* name, const char* phoneNum, const char* email) {
-    TreeNode* oldNode = searchNode(*root, keyName);
-    if (oldNode == NULL) {
+void editContact(TreeNode **root, const char *keyName, const char *name, const char *phoneNum, const char *email)
+{
+    TreeNode *oldNode = searchNode(*root, keyName);
+    if (oldNode == NULL)
+    {
         printf("(editContact) Contact not found.\n");
         return;
     }
 
-    TreeNode* newNode = createNode(createContact(oldNode->contact->index, name, phoneNum, email));
+    TreeNode *newNode = createNode(createContact(oldNode->contact->index, name, phoneNum, email));
 
     *root = deleteContact(*root, keyName);
 
@@ -161,201 +244,238 @@ void editContact(TreeNode** root, const char* keyName, const char* name, const c
     printf("(editContact) Contact successfully updated.\n");
 }
 
+int isInteger(const char *input)
+{
+    if (strlen(input) == 0)
+        return 0;
 
-int isInteger(const char* input) {
-    if (strlen(input) == 0) return 0;
-
-    for(int i = 0 ; i < strlen(input) - 1; i++) {
-        if (!isdigit(input[i])) return 0;
+    for (int i = 0; i < strlen(input) - 1; i++)
+    {
+        if (!isdigit(input[i]))
+            return 0;
     }
 
     return 1;
 }
 
-int isValidPhoneNumber(const char* input) {
+int isValidPhoneNumber(const char *input)
+{
 
     char prefix[] = "+60";
 
-    //Checks if the input is within valid Malaysian phone length 
-    if (strlen(input) < 11 || strlen(input) > 14) {
+    // Checks if the input is within valid Malaysian phone length
+    if (strlen(input) < 11 || strlen(input) > 14)
+    {
         return 0;
     }
 
-    //Checks if the input has the same prefix as required
-    if (strncmp(input, prefix, 3) != 0) {
+    // Checks if the input has the same prefix as required
+    if (strncmp(input, prefix, 3) != 0)
+    {
         return 0;
     }
 
-    //Ensures all characters are digits
-    for(int i = 3; i < strlen(input); i++) {
-        if (!isdigit(input[i])) {
+    // Ensures all characters are digits
+    for (int i = 3; i < strlen(input); i++)
+    {
+        if (!isdigit(input[i]))
+        {
             return 0;
         }
     }
 
     return 1;
-
 }
 
-int isValidEmailAddress(const char* input) {
+int isValidEmailAddress(const char *input)
+{
     char *str1, *str2;
     char specialChar[] = {'!', '#', '$', '%', '&', '\'', '*', '+', '-', '/', '=', '?', '^', '_', '{', '|', '}', '~'};
-    
-    //Duplicate the string
-    char *str = strdup(input);
-    if (str == NULL) return 0;
 
-    //Separate string into user part and domain part
+    // Duplicate the string
+    char *str = strdup(input);
+    if (str == NULL)
+        return 0;
+
+    // Separate string into user part and domain part
     str1 = strtok(str, "@");
     str2 = strtok(NULL, "@");
 
-    if (str1 == NULL || str2 == NULL) {
+    if (str1 == NULL || str2 == NULL)
+    {
         free(str);
         return 0;
     }
 
-    //Validate user part
-    for (int i = 0; i < strlen(str1); i++) {
-        if (!isalnum(str1[i]) && str1[i] != '.') {
+    // Validate user part
+    for (int i = 0; i < strlen(str1); i++)
+    {
+        if (!isalnum(str1[i]) && str1[i] != '.')
+        {
             int valid = 0;
 
-            //Check if character is a special character
-            for (int j = 0; j < sizeof(specialChar) / sizeof(char); j++) {
-                if (str1[i] == specialChar[j]) {
+            // Check if character is a special character
+            for (int j = 0; j < sizeof(specialChar) / sizeof(char); j++)
+            {
+                if (str1[i] == specialChar[j])
+                {
                     valid = 1;
                     break;
                 }
             }
 
-            if (!valid) {
+            if (!valid)
+            {
                 free(str);
                 return 0;
             }
         }
 
-        //Check for consecutive dots or beginnings and endings with a dot
-        if (str1[i] == '.') {
-            if (i == 0 || i == strlen(str1) - 1 || str1[i - 1] == '.') {
+        // Check for consecutive dots or beginnings and endings with a dot
+        if (str1[i] == '.')
+        {
+            if (i == 0 || i == strlen(str1) - 1 || str1[i - 1] == '.')
+            {
                 free(str);
                 return 0;
             }
         }
     }
 
-    //Validate the domain part
-    if (strchr(str2, '.') == NULL) {
+    // Validate the domain part
+    if (strchr(str2, '.') == NULL)
+    {
         free(str);
         return 0;
     }
 
-    for (int i = 0; i < strlen(str2); i++) {
-        if (!isalnum(str2[i]) && str2[i] != '.' && str2[i] != '-') {
+    for (int i = 0; i < strlen(str2); i++)
+    {
+        if (!isalnum(str2[i]) && str2[i] != '.' && str2[i] != '-')
+        {
             free(str);
             return 0;
         }
-    
 
-        //Check for consecutive dots or hyphens and beginnings and endings with them
-        if (str2[i] == '.' || str2[i] == '-') {
-            //Check for beginnings and endings with dot or hyphen
-            if (i == 0 || i == strlen(str2) - 1) {
+        // Check for consecutive dots or hyphens and beginnings and endings with them
+        if (str2[i] == '.' || str2[i] == '-')
+        {
+            // Check for beginnings and endings with dot or hyphen
+            if (i == 0 || i == strlen(str2) - 1)
+            {
                 free(str);
                 return 0;
             }
 
-            //Check for consecutive dots or hyphen
-            if (str2[i - 1] == '.' || str2[i - 1] == '-') {
+            // Check for consecutive dots or hyphen
+            if (str2[i - 1] == '.' || str2[i - 1] == '-')
+            {
                 free(str);
                 return 0;
             }
         }
     }
-
 
     free(str);
     return 1;
 }
 
-int isDuplicate(const char* input, TreeNode* root) {
+int isDuplicate(const char *input, TreeNode *root)
+{
 
-    //Base case for recursion
-    if (root == NULL) return 0;
+    // Base case for recursion
+    if (root == NULL)
+        return 0;
 
-    //Checks the right subtree
-    if (isDuplicate(input, root->rightPtr)) {
+    // Checks the right subtree
+    if (isDuplicate(input, root->rightPtr))
+    {
         return 1;
     }
 
-    //Checks the current node
-    if (strcmp(root->contact->name, input) == 0) {
+    // Checks the current node
+    if (strcmp(root->contact->name, input) == 0)
+    {
         return 1; // Duplicate found at this node
     }
 
-    //Checks the left subtree
-    if (isDuplicate(input, root->leftPtr)) {
+    // Checks the left subtree
+    if (isDuplicate(input, root->leftPtr))
+    {
         return 1;
     }
 
     return 0;
 }
 
-int compareValue(const TreeNode* a, const TreeNode* b, int mode) {
-    if (a == NULL || b == NULL) return 0;
+int compareValue(const TreeNode *a, const TreeNode *b, int mode)
+{
+    if (a == NULL || b == NULL)
+        return 0;
 
-    //Compares the values of either phoneNum or email
-    if (mode == 2) 
+    // Compares the values of either phoneNum or email
+    if (mode == 2)
         return strcmp(a->contact->phoneNum, b->contact->phoneNum);
-    else if (mode == 3) 
+    else if (mode == 3)
         return strcmp(a->contact->email, b->contact->email);
 
     return 0; // Default case, return 0 if mode is invalid
 }
 
-void merge(TreeNode** arr, int left, int mid, int right, int mode) {
+void merge(TreeNode **arr, int left, int mid, int right, int mode)
+{
     int n1 = mid - left + 1;
     int n2 = right - mid;
 
-    TreeNode** L = malloc(n1 * sizeof(TreeNode*)); 
-    TreeNode** R = malloc(n2 * sizeof(TreeNode*)); 
+    TreeNode **L = malloc(n1 * sizeof(TreeNode *));
+    TreeNode **R = malloc(n2 * sizeof(TreeNode *));
 
-    //Copy data to temporary arrays
+    // Copy data to temporary arrays
     for (int i = 0; i < n1; i++)
         L[i] = arr[left + i];
     for (int j = 0; j < n2; j++)
         R[j] = arr[mid + 1 + j];
 
     int i = 0, j = 0, k = left;
-    while (i < n1 && j < n2) {
-        if (compareValue(L[i], R[j], mode) <= 0) {
+    while (i < n1 && j < n2)
+    {
+        if (compareValue(L[i], R[j], mode) <= 0)
+        {
             arr[k] = L[i];
             i++;
-        } else {
+        }
+        else
+        {
             arr[k] = R[j];
             j++;
         }
         k++;
     }
 
-    //Copy the remaining elements of L[], if any
-    while (i < n1) {
+    // Copy the remaining elements of L[], if any
+    while (i < n1)
+    {
         arr[k] = L[i];
         i++;
         k++;
     }
 
-    //Copy the remaining elements of R[], if any
-    while (j < n2) {
+    // Copy the remaining elements of R[], if any
+    while (j < n2)
+    {
         arr[k] = R[j];
         j++;
         k++;
     }
 
-    free(L); 
+    free(L);
     free(R);
 }
 
-void mergesort(TreeNode** arr, int left, int right, int mode) {
-    if (left < right) {
+void mergesort(TreeNode **arr, int left, int right, int mode)
+{
+    if (left < right)
+    {
         int mid = left + (right - left) / 2;
 
         mergesort(arr, left, mid, mode);
@@ -365,15 +485,19 @@ void mergesort(TreeNode** arr, int left, int right, int mode) {
     }
 }
 
-int countTreeNodes(TreeNode* root) {
-    if (root == NULL) return 0;
-    
-    //Returns the count of all nodes in the BST
+int countTreeNodes(TreeNode *root)
+{
+    if (root == NULL)
+        return 0;
+
+    // Returns the count of all nodes in the BST
     return countTreeNodes(root->leftPtr) + countTreeNodes(root->rightPtr) + 1;
 }
 
-void alternateSortHelper(TreeNode* root, TreeNode** arr, int* i) {
-    if (root == NULL) return;
+void alternateSortHelper(TreeNode *root, TreeNode **arr, int *i)
+{
+    if (root == NULL)
+        return;
 
     // Recursively visit the left subtree
     alternateSortHelper(root->leftPtr, arr, i);
@@ -385,13 +509,15 @@ void alternateSortHelper(TreeNode* root, TreeNode** arr, int* i) {
     alternateSortHelper(root->rightPtr, arr, i);
 }
 
-TreeNode** alternateSort(TreeNode* root, int mode) {
+TreeNode **alternateSort(TreeNode *root, int mode)
+{
     int count = countTreeNodes(root);
     int i = 0;
 
-    TreeNode** arr = malloc(count * sizeof(TreeNode*));
+    TreeNode **arr = malloc(count * sizeof(TreeNode *));
 
-    if (arr == NULL) {
+    if (arr == NULL)
+    {
         printf("(alternateSort) Failed to allocate memory");
         return NULL;
     }
