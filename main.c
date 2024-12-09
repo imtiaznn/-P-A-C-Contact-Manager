@@ -162,7 +162,7 @@ int main()
                 break;
             }
 
-            getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved\n? ");
+            getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved (+60xxxxxxxxx) \n? ");
             if (!isValidPhoneNumber(phoneNum))
             {
                 msgFlag = ERROR_INVALID_PHONE;
@@ -171,7 +171,7 @@ int main()
                 break;
             }
 
-            getInput(email, "(3/3) Enter the email of the contact to be saved\n? ");
+            getInput(email, "(3/3) Enter the email of the contact to be saved (xxxxxx@xxxx.xxx) \n? ");
             if (!isValidEmailAddress(email))
             {
                 msgFlag = ERROR_INVALID_EMAIL;
@@ -389,7 +389,7 @@ int main()
     // Updates the CSV everytime the program is closed
     if (updateCSV(root) == -1)
     {
-        msgFlag = 2;
+        msgFlag = ERROR_UPDATE;
     }
 
     free(buffer);
