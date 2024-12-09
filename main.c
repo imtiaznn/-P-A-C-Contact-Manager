@@ -79,6 +79,11 @@ int main() {
         printf("%-43s%-21s%-21s\n", "NAME","PHONE NUMBER","EMAIL");
         printf("%s\n", "----------------------------------------------------------------------------");
         
+        //Resets the current page if a search query is entered
+        if (strlen(query) != 0) {
+            currentPage = 0;
+        }
+
         //Display the contact list
         displayContacts(root, currentPage, query, &count, mode);
 
@@ -86,7 +91,7 @@ int main() {
         maxPage = (int) ceil( (double) count / CONTACT_PER_PAGE) - 1;
 
         printf("\nPAGE (%d/%d)\n", currentPage + 1, maxPage + 1);
-        printf("\n%-61s%s\n\n", "<< (5) Previous Page", "(6) Next Page >>");
+        printf("\n%-61s%s\n\n", "\033[1;34m<< (5) Previous Page\033[0m", "\033[1;34m(6) Next Page >>\033[0m");
 
         //Get input after each iteration
         currentOption = getOption(currentOption,input);
@@ -114,14 +119,14 @@ int main() {
                 }
 
                 //Receives input from the user, removing any newline characters
-                getInput(name, "(1/3) Enter the name of the contact to be saved\n?");
+                getInput(name, "(1/3) Enter the name of the contact to be saved\n? ");
                 if(isDuplicate(name, root)) {
                     printf("%s\n", getErrorMsg[6]);
                     free(name);
                     break;
                 }
 
-                getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved\n?");
+                getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved\n? ");
                 if(!isValidPhoneNumber(phoneNum)) {
                     printf("%s\n", getErrorMsg[7]);
                     free(name);
@@ -129,7 +134,7 @@ int main() {
                     break;
                 }
 
-                getInput(email, "(3/3) Enter the email of the contact to be saved\n?");
+                getInput(email, "(3/3) Enter the email of the contact to be saved\n? ");
                 if(!isValidEmailAddress(email)) {
                     printf("%s\n", getErrorMsg[8]);
                     free(name);
@@ -259,7 +264,7 @@ int main() {
 
             case OPTION_SEARCH:
 
-                getInput(query, "Enter search query:\n? ");
+                getInput(query, "Enter search query (Enter a blank line to reset query):\n? ");
 
                 if(strlen(query) == 0) {
                     printf("%s\n", getErrorMsg[4]);

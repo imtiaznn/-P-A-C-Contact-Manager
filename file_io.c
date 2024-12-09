@@ -200,6 +200,7 @@ void displayContacts(TreeNode* root, int currentPage, const char query[100], int
             }
         }
         free(arr);
+        
     } else {
         // Use in-order traversal
         displayContactsHelper(root, currentPage, query, &matched, count);
