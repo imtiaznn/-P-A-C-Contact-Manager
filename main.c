@@ -87,7 +87,9 @@ int main()
     char query[QUERY_SIZE] = "";
 
     // Decyption
-    decryptFile("contacts.csv");
+    if(fopen("contacts.csv", "r") != NULL) {
+        decryptFile("contacts.csv");
+    }
 
     // Load in data value from CSV into BST
     if (loadCSV(&root, &count) == -1)
@@ -132,12 +134,12 @@ int main()
         // Prints message to the user
         if (msgFlag >= 0 && msgFlag < 10)
         {
-            printf("\n\033[1;31m%s\033[0m", getMsg[msgFlag]);
+            printf("\n\033[1;31m%s\033[0m\n", getMsg[msgFlag]);
             msgFlag = -1;
         }
         else if (msgFlag >= 10 && msgFlag < 20)
         {
-            printf("\n\033[1;32m%s\033[0m", getMsg[msgFlag]);
+            printf("\n\033[1;32m%s\033[0m\n", getMsg[msgFlag]);
             msgFlag = -1;
         }
 
@@ -171,6 +173,7 @@ int main()
 
             // Receives input from the user, removing any newline characters
             getInput(name, "(1/3) Enter the name of the contact to be saved\n? ");
+            
             if (isDuplicate(name, root))
             {
                 msgFlag = ERROR_DUPLICATE;
@@ -178,7 +181,7 @@ int main()
                 break;
             }
 
-            getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved (+60xxxxxxxxx) \n? ");
+            getInput(phoneNum, "(2/3) Enter the the Phone Number of the contact to be saved (+601xxxxxxxx) \n? ");
             if (!isValidPhoneNumber(phoneNum))
             {
                 msgFlag = ERROR_INVALID_PHONE;

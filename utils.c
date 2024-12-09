@@ -174,7 +174,7 @@ int isInteger(const char* input) {
 
 int isValidPhoneNumber(const char* input) {
 
-    char prefix[] = "+60";
+    char prefix[] = "+601";
 
     //Checks if the input is within valid Malaysian phone length 
     if (strlen(input) < 11 || strlen(input) > 14) {
@@ -182,7 +182,7 @@ int isValidPhoneNumber(const char* input) {
     }
 
     //Checks if the input has the same prefix as required
-    if (strncmp(input, prefix, 3) != 0) {
+    if (strncmp(input, prefix, 4) != 0) {
         return 0;
     }
 
