@@ -94,11 +94,6 @@ int main() {
         printf("%s\n", "----------------------------- Contact List ---------------------------------");
         printf("%-43s%-21s%-21s\n", "NAME","PHONE NUMBER","EMAIL");
         printf("%s\n", "----------------------------------------------------------------------------");
-        
-        //Resets the current page if a search query is entered
-        if (strlen(query) != 0) {
-            currentPage = 0;
-        }
 
         //Display the contact list
         displayContacts(root, currentPage, query, &count, mode);
@@ -106,15 +101,22 @@ int main() {
         //Sets the maximum number of pages
         maxPage = (int) ceil( (double) count / CONTACT_PER_PAGE) - 1;
 
-        printf("\nPAGE (%d/%d)\n", currentPage + 1, maxPage + 1);
-        printf("\n%-61s%s\n\n", "\033[1;34m<< (5) Previous Page\033[0m", "\033[1;34m(6) Next Page >>\033[0m");
+        printf("\nPAGE (%d/%d)\n\n", currentPage + 1, maxPage + 1);
+
+        if(currentPage > 0) {
+            printf("\033[1;34m%-61s\033[0m", "<< (5) Previous Page");
+        }
+
+        if(currentPage < maxPage) {
+            printf("\033[1;34m%-s\033[0m", "(6) Next Page >>");
+        }
 
         //Prints message to the user
         if(msgFlag >= 0 && msgFlag < 10) {
-            printf("\033[1;31m%s\033[0m\n\n", getMsg[msgFlag]);
+            printf("\n\033[1;31m%s\033[0m", getMsg[msgFlag]);
             msgFlag = -1;
         } else if (msgFlag >= 10 && msgFlag < 20) {
-            printf("\033[1;32m%s\033[0m\n\n", getMsg[msgFlag]);
+            printf("\n\033[1;32m%s\033[0m", getMsg[msgFlag]);
             msgFlag = -1;
         }
 
@@ -293,6 +295,8 @@ int main() {
 
                 getInput(query, "Enter search query (Enter a blank line to reset query):\n? ");
 
+                currentPage = 0;
+
                 if(strlen(query) == 0) {
                     msgFlag = 4;
                     break;
@@ -305,6 +309,8 @@ int main() {
                 if(currentPage > 0) {
                     //Decrements the current page
                     currentPage--;
+                } else {
+                    msgFlag = ERROR_INVALID_OPTION;
                 }
 
                 break;
@@ -313,14 +319,18 @@ int main() {
                 if (currentPage < maxPage) {
                     //Increments the current page
                     currentPage++;
+                } else {
+                    msgFlag = ERROR_INVALID_OPTION;
                 }
                 break;
 
             case OPTION_TOGGLESORT:
 
-                getInput(buffer, "Enter the index of the selected option (Press 0, 1 or 2):\n0. Sort by Name\n1. Sort by Phone Number\n2. Sort by Email\n? ");
+                getInput(buffer, "Enter the index of the selected option (Press 1, 2 or 3):\n1. Sort by Name\n2. Sort by Phone Number\n3. Sort by Email\n? ");
 
-                if( !isInteger(buffer) || atoi(buffer) < 0 || atoi(buffer) > 2) {
+                currentPage = 0;
+
+                if( !isInteger(buffer) || atoi(buffer) < 1 || atoi(buffer) > 3) {
                     msgFlag = ERROR_INVALID_OPTION;
                 }
 

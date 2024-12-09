@@ -143,6 +143,7 @@ void displayContactsHelper(TreeNode* root, int currentPage, const char query[100
                        root->contact->phoneNum,
                        email);
             }
+
             (*count)++;
         }
     } else {
@@ -154,6 +155,7 @@ void displayContactsHelper(TreeNode* root, int currentPage, const char query[100
                    root->contact->phoneNum,
                    email);
         }
+
         (*count)++;
     }
 
@@ -173,7 +175,7 @@ void displayContacts(TreeNode* root, int currentPage, const char query[100], int
     int matched = 0;
     *count = 0;
 
-    if (mode > 0) {
+    if (mode > 1) {
         // Alternate sorting logic
         *count = countTreeNodes(root);
         int size = countTreeNodes(root);
@@ -199,6 +201,7 @@ void displayContacts(TreeNode* root, int currentPage, const char query[100], int
                 matched++;
             }
         }
+
         free(arr);
         
     } else {
@@ -238,7 +241,7 @@ int refreshIndex(TreeNode* root, int currentIndex) {
 int getOption(int currentOption, char input[10]) {
 
     //Prints the menu display
-    printf("%s\n", "------ Available Operations -----");
+    printf("\n\n%s\n", "------ Available Operations -----");
     printf("\033[36m%-9s\t%-9s\n%-9s\t%-9s\n\n%-9s\033[0m\n\n%-9s\n", "1.Save", "2.Edit", "3.Delete", "4.Search", "7.Sort by Choice", "\033[33mPress '0' to Exit\033[0m");
     printf("%s\n? ", "---------------------------------");
 

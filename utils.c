@@ -303,9 +303,9 @@ int compareValue(const TreeNode* a, const TreeNode* b, int mode) {
     if (a == NULL || b == NULL) return 0;
 
     //Compares the values of either phoneNum or email
-    if (mode == 1) 
+    if (mode == 2) 
         return strcmp(a->contact->phoneNum, b->contact->phoneNum);
-    else if (mode == 2) 
+    else if (mode == 3) 
         return strcmp(a->contact->email, b->contact->email);
 
     return 0; // Default case, return 0 if mode is invalid
