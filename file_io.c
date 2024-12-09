@@ -4,7 +4,7 @@
 #include "structs.h"
 #include "utils.h"
 #define CONTACT_PER_PAGE 5
-#define ENCRYPTION_KEY 0xAA // Example key for XOR encryption
+#define ENCRYPTION_KEY 0xBAC781 // Key for XOR encryption
 
 // Saves a contact into the CSV file, does not save it into the BST however
 void saveContact(const char *name, const char *phoneNum, const char *email)
@@ -297,90 +297,90 @@ void getInput(char *input, const char *message)
 
 void decryptFile(const char *filename)
 {
-    FILE *file = fopen(filename, "rb");
-    if (file == NULL)
+    FILE *fPtr = fopen(filename, "rb");
+    if (fPtr == NULL)
     {
         perror("Error opening file for decryption");
         exit(EXIT_FAILURE);
     }
 
     // Determine the file size
-    fseek(file, 0, SEEK_END);
-    long fileSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    fseek(fPtr, 0, SEEK_END);
+    long fSize = ftell(fPtr);
+    fseek(fPtr, 0, SEEK_SET);
 
     // Read the entire file into memory
-    char *buffer = (char *)malloc(fileSize);
+    char *buffer = (char *)malloc(fSize);
     if (buffer == NULL)
     {
         perror("Memory allocation failed");
-        fclose(file);
+        fclose(fPtr);
         exit(EXIT_FAILURE);
     }
-    fread(buffer, 1, fileSize, file);
-    fclose(file);
+    fread(buffer, 1, fSize, fPtr);
+    fclose(fPtr);
 
     // Decrypt the buffer using XOR encryption
-    for (long i = 0; i < fileSize; i++)
+    for (long i = 0; i < fSize; i++)
     {
         buffer[i] ^= ENCRYPTION_KEY;
     }
 
     // Write the decrypted buffer back to the file
-    file = fopen(filename, "wb");
-    if (file == NULL)
+    fPtr = fopen(filename, "wb");
+    if (fPtr == NULL)
     {
         perror("Error opening file for writing");
         free(buffer);
         exit(EXIT_FAILURE);
     }
-    fwrite(buffer, 1, fileSize, file);
-    fclose(file);
+    fwrite(buffer, 1, fSize, fPtr);
+    fclose(fPtr);
 
     free(buffer);
 }
 
 void encryptFile(const char *filename)
 {
-    FILE *file = fopen(filename, "rb");
-    if (file == NULL)
+    FILE *fPtr = fopen(filename, "rb");
+    if (fPtr == NULL)
     {
         perror("Error opening file for encryption");
         exit(EXIT_FAILURE);
     }
 
     // Determine the file size
-    fseek(file, 0, SEEK_END);
-    long fileSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    fseek(fPtr, 0, SEEK_END);
+    long fSize = ftell(fPtr);
+    fseek(fPtr, 0, SEEK_SET);
 
     // Read the entire file into memory
-    char *buffer = (char *)malloc(fileSize);
+    char *buffer = (char *)malloc(fSize);
     if (buffer == NULL)
     {
         perror("Memory allocation failed");
-        fclose(file);
+        fclose(fPtr);
         exit(EXIT_FAILURE);
     }
-    fread(buffer, 1, fileSize, file);
-    fclose(file);
+    fread(buffer, 1, fSize, fPtr);
+    fclose(fPtr);
 
     // Encrypt the buffer using XOR encryption
-    for (long i = 0; i < fileSize; i++)
+    for (long i = 0; i < fSize; i++)
     {
         buffer[i] ^= ENCRYPTION_KEY;
     }
 
     // Write the encrypted buffer back to the file
-    file = fopen(filename, "wb");
-    if (file == NULL)
+    fPtr = fopen(filename, "wb");
+    if (fPtr == NULL)
     {
         perror("Error opening file for writing");
         free(buffer);
         exit(EXIT_FAILURE);
     }
-    fwrite(buffer, 1, fileSize, file);
-    fclose(file);
+    fwrite(buffer, 1, fSize, fPtr);
+    fclose(fPtr);
 
     free(buffer);
 }
