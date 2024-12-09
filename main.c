@@ -291,10 +291,10 @@ int main()
 
                 msgFlag = SUCCESS_EDIT;
                 needRefreshIndex = 1; // Flag for reloading index or CSV
-            }
-            else
-            {
+            } else if (strcasecmp(confirmBuffer, "N") == 0) {
                 printf("Edit operation canceled.\n");
+            } else {
+                msgFlag = ERROR_INVALID_OPTION;
             }
 
             // Sets the refresh flag
@@ -346,12 +346,6 @@ int main()
             getInput(query, "Enter search query (Enter a blank line to reset query):\n? ");
 
             currentPage = 0;
-
-            if (strlen(query) == 0)
-            {
-                msgFlag = 4;
-                break;
-            }
 
             break;
 
