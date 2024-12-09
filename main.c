@@ -94,13 +94,11 @@ int main()
     }
 
     // Load in data value from CSV into BST
-    if (loadCSV(&root, &count) == -1)
-    {
+    if (loadCSV(&root, &count) == -1) {
         msgFlag = SUCCESS_NEW_FILE;
     }
 
-    while (1)
-    {
+    while (1) {
 
         // Prints the application's header
         printf("%s\n", "-------------------------------------- Contact List ------------------------------------------");
@@ -114,33 +112,25 @@ int main()
         maxPage = (int)ceil((double)count / CONTACT_PER_PAGE) - 1;
 
         // Prints the current page
-        if (maxPage == -1)
-        {
+        if (maxPage == -1) {
             printf("\nPAGE (1/1)\n");
-        }
-        else
-        {
+        } else {
             printf("\nPAGE (%d/%d)\n", currentPage + 1, maxPage + 1);
         }
 
-        if (currentPage > 0)
-        {
-            printf("\033[1;34m%-61s\033[0m", "<< (5) Previous Page");
+        if (currentPage > 0) {
+            printf("\n\033[1;34m%-61s\033[0m\n", "<< (5) Previous Page");
         }
 
-        if (currentPage < maxPage)
-        {
-            printf("\033[1;34m%-s\033[0m", "(6) Next Page >>");
+        if (currentPage < maxPage) {
+            printf("\n\033[1;34m%-s\033[0m\n", "(6) Next Page >>");
         }
 
         // Prints message to the user
-        if (msgFlag >= 0 && msgFlag < 10)
-        {
+        if (msgFlag >= 0 && msgFlag < 10) {
             printf("\n\033[1;31m%s\033[0m\n", getMsg[msgFlag]);
             msgFlag = -1;
-        }
-        else if (msgFlag >= 10 && msgFlag < 20)
-        {
+        } else if (msgFlag >= 10 && msgFlag < 20) {
             printf("\n\033[1;32m%s\033[0m\n", getMsg[msgFlag]);
             msgFlag = -1;
         }
@@ -153,9 +143,8 @@ int main()
             break;
 
         // Program control
-        switch (currentOption)
-        {
-        case OPTION_SAVE:
+        switch (currentOption) { 
+            case OPTION_SAVE:
 
             // Variables acting as buffers for string inputs
             char *name = malloc(100),
