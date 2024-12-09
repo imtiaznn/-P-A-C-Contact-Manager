@@ -240,7 +240,7 @@ int main()
 
             if (currentChoice < 1 || currentChoice > 3)
             {
-                printf("Invalid choice. Please select 1, 2, or 3.\n");
+                msgFlag = ERROR_INVALID_OPTION;
                 break;
             }
 
