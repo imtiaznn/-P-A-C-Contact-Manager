@@ -2,6 +2,7 @@
 #define FILE_IO_H
 #include "structs.h"
 
+
 void saveContact(const char* name, const char* phoneNum, const char* email);
 
 int loadCSV(TreeNode** root, int* count);
@@ -20,4 +21,13 @@ int getOption(int currentOption, char input[10]);
 
 void getInput(char* input, const char* message);
 
+void build_decryption_key();
+
+char encrypt_single_character(char c);
+
+char decrypt_single_character(char c);
+
+void process_string(char *str, int encrypt);
+
+void process_csv(const char *filename, int encrypt);
 #endif

@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "structs.h"
 #include "utils.h"
 #define CONTACT_PER_PAGE 5
+#define KEY_LENGTH 100
 
 //Saves a contact into the CSV file, does not save it into the BST however
 void saveContact(const char* name, const char* phoneNum, const char* email) {
@@ -40,6 +42,9 @@ int loadCSV(TreeNode** root, int* count) {
         char* email = strtok(NULL, "\n");
 
         //Checks for any NULL cases while parsing csv file
+        printf("%s\n", name);
+        printf("%s\n", phoneNum);
+        printf("%s\n", email);
         if (name == NULL || phoneNum == NULL || email == NULL) {
             printf("(loadCSV) Malformed line in CSV: %s\n", line);
             continue;
@@ -256,4 +261,98 @@ void getInput(char* input, const char* message) {
     printf("%s", message);
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = '\0';
+}
+
+const char encryption_key[KEY_LENGTH]= "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm43856723190";
+char decryption_key[KEY_LENGTH]; // Use a larger array to map all possible char values
+
+void build_decryption_key(){    //Mapping of encryption key to decryption key
+    for (int i = 0; i < KEY_LENGTH; i++) {
+        if (i<26){
+            decryption_key[encryption_key[i] - 'A'] = 'A' + i;
+        }
+        else if (i<52){
+            decryption_key[encryption_key[i] - 'a' + 26] = 'a' + i - 26;
+        }
+        else{
+            decryption_key[encryption_key[i] - '0' + 52] = '0' + i - 52;
+        }
+    }   
+}
+
+//Encrypt a single character
+char encrypt_single_character(char c){
+    if (isupper(c)){    //Check if the character is uppercase
+        return encryption_key[c - 'A'];
+    }
+    else if (islower(c)){   //Check if the character is lowercase
+        return encryption_key[c - 'a' + 26];
+    }
+    else if (isdigit(c)){   //Check if the character is a digit
+        return encryption_key[c - '0' + 52];
+    }
+
+    return c;
+}
+
+//Decrypt a single character
+char decrypt_single_character(char c){
+    if (isupper(c)){    //Check if the character is uppercase
+        return decryption_key[c - 'A'];
+    }
+    else if (islower(c)){   //Check if the character is lowercase
+        return decryption_key[c - 'a' + 26];
+    }
+    else if (isdigit(c)){   //Check if the character is a digit
+        return decryption_key[c - '0' + 52];
+    }    
+
+    return c;
+}
+
+//Process string for encryption or decryption
+void process_string(char *str, int encrypt){
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (encrypt){
+            str[i] = encrypt_single_character(str[i]);
+        }
+        else{
+            str[i] = decrypt_single_character(str[i]);
+        }
+    }
+}
+
+void process_csv(const char *filename, int encrypt){
+    FILE *fPtr = fopen(filename, "r+");
+    if (!fPtr){ //Check if the file is opened successfully
+        perror("Error opening file");
+        return;
+    }
+
+    //Get the size of the file
+    fseek(fPtr, 0, SEEK_END);
+    long fsize = ftell(fPtr);
+    rewind(fPtr);   //Return file pointer to the beginning of the file
+
+    char *content = (char *)malloc(fsize - 1); //Allocate memory for the content of the file
+
+    if (!content){  //Check if memory allocation is successful
+        perror("Error allocating memory");
+        fclose(fPtr);
+        return;
+    }
+
+    fread(content, 1, fsize, fPtr); //Read the content of the file
+
+    //content[fsize] = '\0';  //Add null terminator to the end of the content
+    process_string(content, encrypt);
+
+    // Write the processed content back to the same file
+    rewind(fPtr);
+
+    fwrite(content, 1, fsize, fPtr);
+
+    // Free memory after use
+    free(content);
+    fclose(fPtr);
 }
