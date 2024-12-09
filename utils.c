@@ -85,7 +85,6 @@ TreeNode* searchNode(TreeNode* root, const char* name) {
     //Returns the root if theres no tree or if node is found
     if (root == NULL || strcmp(root->contact->name, name) == 0) return root;
     
-
     //Continues searching towards node to the left or right of the root
     if (strcmp(root->contact->name, name) > 0) {
         return searchNode(root->leftPtr, name);
@@ -95,6 +94,7 @@ TreeNode* searchNode(TreeNode* root, const char* name) {
     
 }
 
+//Deletes a node based on the name
 TreeNode* deleteContact(TreeNode* root, const char* name) {
     if (root == NULL) {
         printf("Reached a NULL node; contact not found.\n");
@@ -103,19 +103,15 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
 
     // Compare the name with the current node's contact name
     if (strcmp(name, root->contact->name) < 0) {
-
         root->leftPtr = deleteContact(root->leftPtr, name);
-    
     } else if (strcmp(name, root->contact->name) > 0) {
-    
         root->rightPtr = deleteContact(root->rightPtr, name);
-    
     } else {
-        
         // Node to be deleted found
         printf("Contact '%s' found. Performing selected operation...\n", name);
 
         if (root->leftPtr == NULL) {
+            // If the node has only right child or no children
             TreeNode* temp = root->rightPtr;
             freeContact(root->contact);
             free(root);
@@ -123,6 +119,7 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
         }
 
         else if (root->rightPtr == NULL) {
+            // If the node has only left child
             TreeNode* temp = root->leftPtr;
             freeContact(root->contact);
             free(root);
@@ -145,26 +142,32 @@ TreeNode* deleteContact(TreeNode* root, const char* name) {
     return root;
 }
 
+//Edits a contact based on the keyName
 void editContact(TreeNode** root, const char* keyName, const char* name, const char* phoneNum, const char* email) {
+    //Finds the node to be edited
     TreeNode* oldNode = searchNode(*root, keyName);
     if (oldNode == NULL) {
         printf("(editContact) Contact not found.\n");
         return;
     }
 
+    //Creates a new node with the updated contact information
     TreeNode* newNode = createNode(createContact(oldNode->contact->index, name, phoneNum, email));
 
+    //Deletes the old node and inserts the new node
     *root = deleteContact(*root, keyName);
 
+    //Inserts the new node into the BST
     insertNode(*root, newNode);
 
     printf("(editContact) Contact successfully updated.\n");
 }
 
-
+//Checks if the input is an integer
 int isInteger(const char* input) {
     if (strlen(input) == 0) return 0;
 
+    //Ensures all characters are digits
     for(int i = 0 ; i < strlen(input) - 1; i++) {
         if (!isdigit(input[i])) return 0;
     }
@@ -172,8 +175,10 @@ int isInteger(const char* input) {
     return 1;
 }
 
+//Checks if the input is a valid Malaysian phone number
 int isValidPhoneNumber(const char* input) {
 
+    //Prefix for Malaysian phone numbers
     char prefix[] = "+601";
 
     //Checks if the input is within valid Malaysian phone length 
@@ -197,8 +202,11 @@ int isValidPhoneNumber(const char* input) {
 
 }
 
+//Checks if the input is a valid email address
 int isValidEmailAddress(const char* input) {
+    //Separates the user part and domain part
     char *str1, *str2;
+
     char specialChar[] = {'!', '#', '$', '%', '&', '\'', '*', '+', '-', '/', '=', '?', '^', '_', '{', '|', '}', '~'};
     
     //Duplicate the string
@@ -216,11 +224,13 @@ int isValidEmailAddress(const char* input) {
 
     //Validate user part
     for (int i = 0; i < strlen(str1); i++) {
+        //Check if character is alphanumeric
         if (!isalnum(str1[i]) && str1[i] != '.') {
             int valid = 0;
 
             //Check if character is a special character
             for (int j = 0; j < sizeof(specialChar) / sizeof(char); j++) {
+                //If character is a special character, set valid flag
                 if (str1[i] == specialChar[j]) {
                     valid = 1;
                     break;
@@ -243,11 +253,13 @@ int isValidEmailAddress(const char* input) {
     }
 
     //Validate the domain part
+    //Check if domain part has a dot
     if (strchr(str2, '.') == NULL) {
         free(str);
         return 0;
     }
 
+    //Check for consecutive dots or beginnings and endings with a dot
     for (int i = 0; i < strlen(str2); i++) {
         if (!isalnum(str2[i]) && str2[i] != '.' && str2[i] != '-') {
             free(str);
@@ -276,9 +288,9 @@ int isValidEmailAddress(const char* input) {
     return 1;
 }
 
+//Checks if the input is a duplicate key in the BST
 int isDuplicate(const char* input, TreeNode* root) {
 
-    //Base case for recursion
     if (root == NULL) return 0;
 
     //Checks the right subtree
@@ -299,18 +311,21 @@ int isDuplicate(const char* input, TreeNode* root) {
     return 0;
 }
 
+//Compares the values of either phoneNum or email based on mode
 int compareValue(const TreeNode* a, const TreeNode* b, int mode) {
     if (a == NULL || b == NULL) return 0;
 
     //Compares the values of either phoneNum or email
-    if (mode == 2) 
+    if (mode == 2) {
         return strcmp(a->contact->phoneNum, b->contact->phoneNum);
-    else if (mode == 3) 
+    } else if (mode == 3) {
         return strcmp(a->contact->email, b->contact->email);
+    }
 
-    return 0; // Default case, return 0 if mode is invalid
+    return 0; //return 0 if mode is invalid
 }
 
+//Merges the left and right arrays into a single array
 void merge(TreeNode** arr, int left, int mid, int right, int mode) {
     int n1 = mid - left + 1;
     int n2 = right - mid;
@@ -324,8 +339,10 @@ void merge(TreeNode** arr, int left, int mid, int right, int mode) {
     for (int j = 0; j < n2; j++)
         R[j] = arr[mid + 1 + j];
 
+    //Merge the temporary arrays back into arr[]
     int i = 0, j = 0, k = left;
     while (i < n1 && j < n2) {
+        //Compare the values of the left and right arrays
         if (compareValue(L[i], R[j], mode) <= 0) {
             arr[k] = L[i];
             i++;
@@ -354,17 +371,22 @@ void merge(TreeNode** arr, int left, int mid, int right, int mode) {
     free(R);
 }
 
+//Sorts the array using mergesort
 void mergesort(TreeNode** arr, int left, int right, int mode) {
     if (left < right) {
+        //Finds the middle point
         int mid = left + (right - left) / 2;
 
+        //Sort first and second halves
         mergesort(arr, left, mid, mode);
         mergesort(arr, mid + 1, right, mode);
 
+        //Merge the sorted halves
         merge(arr, left, mid, right, mode);
     }
 }
 
+//Counts the number of nodes in the BST
 int countTreeNodes(TreeNode* root) {
     if (root == NULL) return 0;
     
@@ -372,6 +394,7 @@ int countTreeNodes(TreeNode* root) {
     return countTreeNodes(root->leftPtr) + countTreeNodes(root->rightPtr) + 1;
 }
 
+//Stores the nodes of the BST in an array
 void alternateSortHelper(TreeNode* root, TreeNode** arr, int* i) {
     if (root == NULL) return;
 
@@ -385,6 +408,7 @@ void alternateSortHelper(TreeNode* root, TreeNode** arr, int* i) {
     alternateSortHelper(root->rightPtr, arr, i);
 }
 
+//Sorts the BST in ascending order based on the mode
 TreeNode** alternateSort(TreeNode* root, int mode) {
     int count = countTreeNodes(root);
     int i = 0;
@@ -398,7 +422,7 @@ TreeNode** alternateSort(TreeNode* root, int mode) {
 
     alternateSortHelper(root, arr, &i);
 
-    // Sort the array in ascending order using mergesort
+    //Sort the array in ascending order using mergesort
     mergesort(arr, 0, count - 1, mode);
 
     return arr;
